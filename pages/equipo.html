@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Equipo</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .chest-hero {
+      background: linear-gradient(135deg, #B8973A, #8A6A10);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .chest-hero::before {
+      content: '🏆';
+      position: absolute;
+      right: 20px; bottom: -10px;
+      font-size: 6rem; opacity: 0.15;
+    }
+    .chest-hero h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; margin-bottom: 4px;
+    }
+    .chest-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem; font-weight: 700;
+      color: var(--gold-lt);
+      line-height: 1; margin: 12px 0 4px;
+    }
+    .chest-sub { font-size: .88rem; opacity: .7; margin-bottom: 16px; }
+    .chest-progress-wrap {
+      background: rgba(255,255,255,0.2);
+      border-radius: 99px; height: 10px;
+      overflow: hidden; margin: 12px 0 6px;
+    }
+    .chest-progress-fill {
+      height: 100%;
+      background: var(--gold-lt);
+      border-radius: 99px;
+      transition: width .6s ease;
+    }
+    .chest-pct { font-size: .8rem; opacity: .75; }
+
+    .mission-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .mission-card.completed { opacity: .65; }
+    .mission-name { font-weight: 700; font-size: .95rem; margin-bottom: 4px; }
+    .mission-desc { font-size: .8rem; color: var(--text-muted); margin-bottom: 12px; }
+    .mission-target { display: flex; justify-content: space-between; font-size: .8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .mission-reward {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: #fdf3ce; color: #8A6A10;
+      border-radius: 99px; padding: 3px 10px;
+      font-size: .75rem; font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .captain-card {
+      background: linear-gradient(135deg, #2E5B3C, #1a3d27);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      color: #fff;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .captain-crown { font-size: 2.5rem; }
+    .captain-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .captain-sub { font-size: .82rem; opacity: .7; }
+    .captain-powers { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .captain-power {
+      background: rgba(255,255,255,.12);
+      border-radius: 8px; padding: 8px 12px;
+      font-size: .78rem; cursor: pointer;
+      transition: var(--transition);
+    }
+    .captain-power:hover { background: rgba(255,255,255,.2); }
+
+    .ranking-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .ranking-row:last-child { border-bottom: none; }
+    .ranking-pos {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700;
+      width: 28px; text-align: center;
+      color: var(--text-muted);
+    }
+    .ranking-pos.gold  { color: var(--gold); }
+    .ranking-pos.silver { color: #9E9E9E; }
+    .ranking-pos.bronze { color: #CD7F32; }
+    .ranking-info { flex: 1; }
+    .ranking-name { font-weight: 600; font-size: .92rem; }
+    .ranking-pages { font-size: .78rem; color: var(--text-muted); }
+    .ranking-coins { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--gold); }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html" class="active">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">El Equipo</div>
+    <div class="page-subtitle">Cofre comunal, misiones familiares y Capitán de la Semana</div>
+  </div>
+
+  <!-- COFRE -->
+  <div class="chest-hero">
+    <h2>🏆 Cofre del Tesoro Comunal</h2>
+    <div class="chest-amount" id="chest-amount">◈ 0</div>
+    <div class="chest-sub" id="chest-sub">Meta: ◈ 1.000</div>
+    <div class="chest-progress-wrap">
+      <div class="chest-progress-fill" id="chest-bar" style="width:0%"></div>
+    </div>
+    <div class="chest-pct" id="chest-pct">0% completado</div>
+    <div style="margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="BC.openModal('modal-chest-add')">+ Agregar monedas</button>
+      <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="BC.openModal('modal-chest-target')">Cambiar meta</button>
+      <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;" onclick="resetChest()">Reiniciar cofre</button>
+    </div>
+  </div>
+
+  <!-- CAPITÁN -->
+  <div id="captain-section" style="margin-bottom:24px;"></div>
+
+  <div class="grid-2">
+    <!-- MISIONES -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">🗺 Misiones de Equipo</div>
+        <button class="btn btn-primary btn-sm" onclick="BC.openModal('modal-mission')">+ Misión</button>
+      </div>
+      <div id="missions-list">
+        <div class="empty-state"><div class="empty-icon">🗺</div>Sin misiones activas</div>
+      </div>
+    </div>
+
+    <!-- RANKING -->
+    <div class="card">
+      <div class="card-title">📊 Ranking Semanal</div>
+      <div id="ranking-list"></div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-ghost btn-full btn-sm" onclick="electCaptain()">⚡ Elegir Capitán de esta semana</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODALES -->
+<div class="modal-overlay" id="modal-chest-add">
+  <div class="modal">
+    <div class="modal-title">Agregar al Cofre</div>
+    <div class="form-group">
+      <label class="form-label">Cantidad (◈)</label>
+      <input class="form-input" id="chest-add-amount" type="number" min="1" placeholder="50">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo</label>
+      <input class="form-input" id="chest-add-reason" type="text" placeholder="Ej: Bono de la semana">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-chest-add')">Cancelar</button>
+      <button class="btn btn-gold" onclick="addToChest()" style="color:var(--text)">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-chest-target">
+  <div class="modal">
+    <div class="modal-title">Cambiar meta del cofre</div>
+    <div class="form-group">
+      <label class="form-label">Nueva meta (◈)</label>
+      <input class="form-input" id="chest-target-val" type="number" min="100" placeholder="1000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">¿Cuál es el premio familiar?</label>
+      <input class="form-input" id="chest-prize-desc" type="text" placeholder="Ej: Ir al cine todos juntos">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-chest-target')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveChestTarget()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-mission">
+  <div class="modal">
+    <div class="modal-title">Nueva Misión de Equipo</div>
+    <div class="form-group">
+      <label class="form-label">Nombre de la misión</label>
+      <input class="form-input" id="mission-name" type="text" placeholder="Ej: Lectura Maratón">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <input class="form-input" id="mission-desc" type="text" placeholder="¿Qué deben lograr?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Meta total de páginas (entre todos)</label>
+      <input class="form-input" id="mission-target" type="number" min="1" placeholder="200">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Premio al completar</label>
+      <input class="form-input" id="mission-reward" type="text" placeholder="Ej: Pizza familiar">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-mission')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMission()">Crear misión</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, getChild, uid, showToast, openModal, closeModal, getAvatarColor, electCaptain: electCap } = BC;
+
+  function init() {
+    renderAll();
+  }
+
+  function renderAll() {
+    const state = loadState();
+    renderChest(state);
+    renderCaptain(state);
+    renderMissions(state);
+    renderRanking(state);
+  }
+
+  function renderChest(state) {
+    const pct = state.communalChestTarget > 0
+      ? Math.min(100, Math.round(state.communalChest / state.communalChestTarget * 100))
+      : 0;
+    document.getElementById('chest-amount').textContent = '◈ ' + state.communalChest.toLocaleString('es-CL');
+    document.getElementById('chest-sub').textContent =
+      `Meta: ◈ ${state.communalChestTarget.toLocaleString('es-CL')}${state.chestPrize ? ' — ' + state.chestPrize : ''}`;
+    document.getElementById('chest-bar').style.width  = pct + '%';
+    document.getElementById('chest-pct').textContent  =
+      pct >= 100 ? '🎉 ¡Meta alcanzada! Premio disponible' : `${pct}% completado`;
+  }
+
+  function addToChest() {
+    const amount = +document.getElementById('chest-add-amount').value;
+    if (!amount) { showToast('Ingresa una cantidad', 'error'); return; }
+    const state = loadState();
+    state.communalChest = Math.min(state.communalChestTarget,
+      state.communalChest + amount);
+    saveState(state);
+    closeModal('modal-chest-add');
+    renderChest(state);
+    showToast(`+◈${amount} al cofre comunal`, 'gold');
+  }
+
+  function saveChestTarget() {
+    const target = +document.getElementById('chest-target-val').value;
+    if (!target) { showToast('Ingresa una meta válida', 'error'); return; }
+    const state = loadState();
+    state.communalChestTarget = target;
+    state.chestPrize = document.getElementById('chest-prize-desc').value.trim();
+    saveState(state);
+    closeModal('modal-chest-target');
+    renderChest(state);
+    showToast('Meta del cofre actualizada', 'success');
+  }
+
+  function resetChest() {
+    if (!confirm('¿Reiniciar el cofre comunal a cero?')) return;
+    const state = loadState();
+    state.communalChest = 0;
+    saveState(state);
+    renderChest(state);
+    showToast('Cofre reiniciado');
+  }
+
+  function renderCaptain(state) {
+    const sec = document.getElementById('captain-section');
+    if (!state.weekCaptain) {
+      sec.innerHTML = `
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; text-align:center; color:var(--text-muted);">
+          <div style="font-size:1.5rem; margin-bottom:8px;">👑</div>
+          <div style="font-weight:600; margin-bottom:4px;">Sin Capitán esta semana</div>
+          <div style="font-size:.82rem;">Usa el botón del ranking para elegir al capitán</div>
+        </div>
+      `;
+      return;
+    }
+    const child = getChild(state, state.weekCaptain);
+    if (!child) return;
+    const idx   = state.children.indexOf(child);
+    const color = child.color || getAvatarColor(idx);
+    sec.innerHTML = `
+      <div class="captain-card">
+        <div>
+          <div class="captain-crown">👑</div>
+          <div style="font-size:.7rem; opacity:.6; text-transform:uppercase; letter-spacing:.06em; margin-top:6px;">Capitán de la Semana</div>
+        </div>
+        <div>
+          <div class="captain-name">${child.name}</div>
+          <div class="captain-sub">◈ ${child.balance.toLocaleString('es-CL')} · Nivel ${child.level}</div>
+          <div class="captain-powers">
+            <div class="captain-power" onclick="captainPower('reward')">🎁 Elegir recompensa grupal</div>
+            <div class="captain-power" onclick="captainPower('pardon')">🤝 Perdonar multa de hermano</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function captainPower(type) {
+    if (type === 'reward') {
+      const reward = prompt('¿Qué recompensa elige el Capitán para el grupo?');
+      if (reward) showToast(`Recompensa grupal: "${reward}" 🎉`, 'gold');
+    } else {
+      const state = loadState();
+      const others = state.children.filter(c => c.id !== state.weekCaptain);
+      if (others.length === 0) { showToast('No hay otros lectores'); return; }
+      const names = others.map((c,i) => `${i+1}. ${c.name}`).join('\n');
+      const idx = +prompt(`¿A quién perdonar?\n${names}\n\nEscribe el número:`);
+      if (idx >= 1 && idx <= others.length) {
+        showToast(`El Capitán perdona una multa menor a ${others[idx-1].name} 🤝`, 'success');
+      }
+    }
+  }
+
+  function electCaptain() {
+    const state = loadState();
+    electCap(state);
+    saveState(state);
+    renderCaptain(state);
+    const cap = getChild(state, state.weekCaptain);
+    if (cap) showToast(`👑 ${cap.name} es el Capitán de la Semana!`, 'gold');
+  }
+
+  function renderMissions(state) {
+    const list     = document.getElementById('missions-list');
+    const missions = state.missions || [];
+    if (missions.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🗺</div>Sin misiones activas</div>';
+      return;
+    }
+    // Calculate total pages from transactions
+    const weeklyPages = {};
+    state.children.forEach(c => { weeklyPages[c.id] = c.totalPages; });
+    list.innerHTML = missions.map(m => {
+      const current = Math.min(m.target, m.progress || 0);
+      const pct = Math.round(current / m.target * 100);
+      return `
+        <div class="mission-card ${m.completed ? 'completed' : ''}" style="margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="mission-name">${m.completed ? '✅ ' : '🗺 '}${m.name}</div>
+            <button class="btn btn-ghost btn-sm" onclick="deleteMission('${m.id}')">✕</button>
+          </div>
+          <div class="mission-desc">${m.desc || ''}</div>
+          <div class="mission-target"><span>Progreso</span><span>${current} / ${m.target} págs</span></div>
+          <div class="progress-wrap"><div class="progress-fill gold" style="width:${pct}%"></div></div>
+          ${m.completed ? '' : `<button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="addMissionPages('${m.id}')">+ Agregar páginas</button>`}
+          <div class="mission-reward">🎁 ${m.reward}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function addMissionPages(missionId) {
+    const pages = +prompt('¿Cuántas páginas agregar a la misión?');
+    if (!pages || pages < 1) return;
+    const state = loadState();
+    const mission = state.missions.find(m => m.id === missionId);
+    if (!mission) return;
+    mission.progress = Math.min(mission.target, (mission.progress || 0) + pages);
+    if (mission.progress >= mission.target) {
+      mission.completed = true;
+      showToast(`¡Misión "${mission.name}" completada! 🎉 Premio: ${mission.reward}`, 'gold');
+    } else {
+      showToast(`+${pages} páginas a la misión`, 'success');
+    }
+    saveState(state);
+    renderMissions(state);
+  }
+
+  function saveMission() {
+    const name   = document.getElementById('mission-name').value.trim();
+    const target = +document.getElementById('mission-target').value;
+    const reward = document.getElementById('mission-reward').value.trim();
+    if (!name || !target || !reward) { showToast('Completa todos los campos', 'error'); return; }
+    const state = loadState();
+    if (!state.missions) state.missions = [];
+    state.missions.push({
+      id: uid(), name,
+      desc: document.getElementById('mission-desc').value.trim(),
+      target, reward, progress: 0, completed: false,
+      createdAt: new Date().toISOString()
+    });
+    saveState(state);
+    closeModal('modal-mission');
+    renderMissions(state);
+    showToast('Misión creada', 'success');
+  }
+
+  function deleteMission(id) {
+    const state = loadState();
+    state.missions = state.missions.filter(m => m.id !== id);
+    saveState(state);
+    renderMissions(state);
+  }
+
+  function renderRanking(state) {
+    const list     = document.getElementById('ranking-list');
+    const children = [...state.children].sort((a, b) => b.totalPages - a.totalPages);
+    if (children.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div>Sin lectores</div>';
+      return;
+    }
+    const positions = ['🥇','🥈','🥉'];
+    const posClass  = ['gold','silver','bronze'];
+    list.innerHTML = children.map((c, i) => {
+      const idx   = state.children.indexOf(c);
+      const color = c.color || getAvatarColor(idx);
+      return `
+        <div class="ranking-row">
+          <div class="ranking-pos ${posClass[i] || ''}">${positions[i] || (i+1)}</div>
+          <div class="avatar" style="width:36px;height:36px;font-size:.95rem;background:${color}20;color:${color};">${c.avatar}</div>
+          <div class="ranking-info">
+            <div class="ranking-name">${state.weekCaptain === c.id ? '👑 ' : ''}${c.name}</div>
+            <div class="ranking-pages">${c.totalPages} páginas totales · Nv. ${c.level}</div>
+          </div>
+          <div class="ranking-coins">◈ ${c.balance.toLocaleString('es-CL')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  init();
+</script>
+</body>
+</html>

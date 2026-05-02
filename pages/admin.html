@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Configuración</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .child-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .child-row:last-child { border-bottom: none; }
+    .child-row-info { flex: 1; }
+    .child-row-name { font-weight: 600; font-size: 0.95rem; }
+    .child-row-meta { font-size: 0.8rem; color: var(--text-muted); }
+    .child-row-actions { display: flex; gap: 6px; }
+
+    .color-picker-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .color-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      cursor: pointer; border: 2.5px solid transparent;
+      transition: var(--transition);
+    }
+    .color-dot.selected { border-color: var(--text); transform: scale(1.15); }
+
+    .contract-options { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 6px; }
+    .contract-opt {
+      border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 10px;
+      cursor: pointer; text-align: center;
+      transition: var(--transition);
+    }
+    .contract-opt.selected { border-color: var(--accent); background: #e9f2ec; }
+    .contract-opt .co-icon { font-size: 1.3rem; margin-bottom: 4px; }
+    .contract-opt .co-name { font-size: 0.82rem; font-weight: 600; }
+    .contract-opt .co-desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .contract-opt.hard.selected { border-color: var(--red); background: #fadddb; }
+    .contract-opt.easy.selected { border-color: var(--blue); background: #d6eaf8; }
+
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 0.9rem; font-weight: 500; }
+    .settings-row-sub   { font-size: 0.78rem; color: var(--text-muted); }
+    .settings-row input, .settings-row select { max-width: 160px; }
+    .toggle-wrap {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toggle {
+      width: 40px; height: 22px;
+      background: var(--border);
+      border-radius: 99px;
+      position: relative; cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      border: none;
+    }
+    .toggle::after {
+      content:''; position:absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; top: 3px; left: 3px;
+      transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle.on::after { left: 21px; }
+
+    .danger-zone { border-color: var(--red-lt) !important; }
+    .danger-zone .card-title { color: var(--red); }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html" class="active">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Configuración</div>
+    <div class="page-subtitle">Gestiona perfiles, tasas de cambio y reglas del sistema</div>
+  </div>
+
+  <div class="tabs" id="admin-tabs">
+    <button class="tab-btn" data-tab="children">👦 Perfiles</button>
+    <button class="tab-btn" data-tab="economy">💰 Economía</button>
+    <button class="tab-btn" data-tab="discipline">⚖️ Disciplina</button>
+    <button class="tab-btn" data-tab="weekly">📅 Semana Temática</button>
+    <button class="tab-btn" data-tab="danger">🗑 Datos</button>
+  </div>
+
+  <!-- TAB: PERFILES -->
+  <div class="tab-panel" data-panel="children">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">Lectores registrados</div>
+        <button class="btn btn-primary btn-sm" onclick="BC.openModal('modal-child')">+ Nuevo perfil</button>
+      </div>
+      <div id="children-list">
+        <div class="empty-state"><div class="empty-icon">👦</div>No hay perfiles aún</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ECONOMÍA -->
+  <div class="tab-panel" data-panel="economy">
+    <div class="card">
+      <div class="card-title">Parámetros monetarios</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Nombre de la moneda</div>
+          <div class="settings-row-sub">Cómo se llaman las monedas internas</div>
+        </div>
+        <input class="form-input" id="cfg-coinName" type="text" placeholder="Talento" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Tasa de cambio (CLP)</div>
+          <div class="settings-row-sub">Cuántos pesos vale 1 moneda interna</div>
+        </div>
+        <input class="form-input" id="cfg-exchangeRate" type="number" min="1" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Monedas por página (contrato normal)</div>
+          <div class="settings-row-sub">Base antes de multiplicadores de contrato</div>
+        </div>
+        <input class="form-input" id="cfg-coinsPerPage" type="number" min="1" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Meta cofre comunal</div>
+          <div class="settings-row-sub">Total de monedas para premio familiar</div>
+        </div>
+        <input class="form-input" id="cfg-chestTarget" type="number" min="100" style="max-width:160px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="saveEconomy()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: DISCIPLINA -->
+  <div class="tab-panel" data-panel="discipline">
+    <div class="card">
+      <div class="card-title">Reglas de oxidación (impuesto a la flojera)</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Días sin actividad hasta oxidar</div>
+          <div class="settings-row-sub">Inactividad antes de cobrar el impuesto</div>
+        </div>
+        <input class="form-input" id="cfg-rustDays" type="number" min="1" max="30" style="max-width:120px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Porcentaje de oxidación</div>
+          <div class="settings-row-sub">% del saldo que se pierde por inactividad</div>
+        </div>
+        <input class="form-input" id="cfg-rustPercent" type="number" min="1" max="50" style="max-width:120px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="saveDiscipline()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SEMANA TEMÁTICA -->
+  <div class="tab-panel" data-panel="weekly">
+    <div class="card">
+      <div class="card-title">Semana Temática</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Activar semana temática</div>
+          <div class="settings-row-sub">Las páginas de este género pagan el doble</div>
+        </div>
+        <button class="toggle" id="toggle-weekly" onclick="toggleWeekly()"></button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Género de la semana</div>
+        </div>
+        <select class="form-select" id="cfg-weekGenre" style="max-width:180px">
+          <option>Historia</option>
+          <option>Ciencia</option>
+          <option>Poesía</option>
+          <option>Aventura</option>
+          <option>Geografía</option>
+          <option>Biografías</option>
+          <option>Naturaleza</option>
+          <option>Fantasía</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Multiplicador de bono</div>
+          <div class="settings-row-sub">Veces extra que paga (ej: 2 = paga doble)</div>
+        </div>
+        <input class="form-input" id="cfg-weekMultiplier" type="number" min="1.1" max="5" step="0.1" style="max-width:120px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="saveWeekly()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: DATOS -->
+  <div class="tab-panel" data-panel="danger">
+    <div class="card danger-zone">
+      <div class="card-title">⚠ Zona de riesgo</div>
+      <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:20px;">
+        Estas acciones no se pueden deshacer. Úsalas con cuidado.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn btn-ghost" onclick="exportData()">📥 Exportar datos (JSON)</button>
+        <button class="btn btn-ghost" onclick="importData()">📤 Importar datos</button>
+        <button class="btn btn-danger" onclick="confirmReset()">🗑 Borrar todos los datos</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="doImport(event)">
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL: NUEVO/EDITAR PERFIL -->
+<div class="modal-overlay" id="modal-child">
+  <div class="modal">
+    <div class="modal-title" id="child-modal-title">Nuevo Lector</div>
+    <input type="hidden" id="edit-child-id">
+
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="child-name" type="text" placeholder="Ej: Sofía">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji / Inicial del avatar</label>
+      <input class="form-input" id="child-avatar" type="text" maxlength="2" placeholder="S">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color del perfil</label>
+      <div class="color-picker-group" id="color-picker"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contrato inicial</label>
+      <div class="contract-options">
+        <div class="contract-opt easy" data-contract="easy" onclick="selectContract('easy')">
+          <div class="co-icon">🌱</div>
+          <div class="co-name">Fácil</div>
+          <div class="co-desc">Paga ×0.7 · Multas leves</div>
+        </div>
+        <div class="contract-opt normal selected" data-contract="normal" onclick="selectContract('normal')">
+          <div class="co-icon">⚖️</div>
+          <div class="co-name">Normal</div>
+          <div class="co-desc">Paga ×1.0 · Reglas estándar</div>
+        </div>
+        <div class="contract-opt hard" data-contract="hard" onclick="selectContract('hard')">
+          <div class="co-icon">🔥</div>
+          <div class="co-name">Difícil</div>
+          <div class="co-desc">Paga ×1.6 · Multas duras</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-child')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveChild()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, createChild, getChild, uid, showToast, openModal, closeModal, initTabs, AVATAR_COLORS } = BC;
+
+  let selectedContract = 'normal';
+  let selectedColor = AVATAR_COLORS[0];
+
+  // Init tabs
+  initTabs(document.getElementById('admin-tabs'));
+
+  // Color picker
+  function buildColorPicker(currentColor) {
+    const cp = document.getElementById('color-picker');
+    cp.innerHTML = '';
+    AVATAR_COLORS.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'color-dot' + (c === (currentColor || selectedColor) ? ' selected' : '');
+      d.style.background = c;
+      d.onclick = () => {
+        selectedColor = c;
+        cp.querySelectorAll('.color-dot').forEach(x => x.classList.remove('selected'));
+        d.classList.add('selected');
+      };
+      cp.appendChild(d);
+    });
+    selectedColor = currentColor || AVATAR_COLORS[0];
+  }
+
+  function selectContract(c) {
+    selectedContract = c;
+    document.querySelectorAll('.contract-opt').forEach(el => {
+      el.classList.toggle('selected', el.dataset.contract === c);
+    });
+  }
+
+  // Render children list
+  function renderChildren() {
+    const state = loadState();
+    const list  = document.getElementById('children-list');
+    if (state.children.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">👦</div>No hay perfiles aún</div>';
+      return;
+    }
+    list.innerHTML = state.children.map((c, idx) => {
+      const color = c.color || BC.getAvatarColor(idx);
+      const contractLabel = { easy:'Fácil', normal:'Normal', hard:'Difícil' }[c.contract] || 'Normal';
+      return `
+        <div class="child-row">
+          <div class="avatar" style="background:${color}20;color:${color};border:2px solid ${color}40;">${c.avatar}</div>
+          <div class="child-row-info">
+            <div class="child-row-name">${c.name}</div>
+            <div class="child-row-meta">Nivel ${c.level} · ◈ ${c.balance.toLocaleString('es-CL')} · Contrato ${contractLabel}</div>
+          </div>
+          <div class="child-row-actions">
+            <button class="btn btn-ghost btn-sm" onclick="editChild('${c.id}')">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteChild('${c.id}')">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Load settings into forms
+  function loadSettings() {
+    const state = loadState();
+    const s = state.settings;
+    document.getElementById('cfg-coinName').value        = s.coinName || 'Talento';
+    document.getElementById('cfg-exchangeRate').value    = s.exchangeRate || 500;
+    document.getElementById('cfg-coinsPerPage').value    = s.coinsPerPage || 2;
+    document.getElementById('cfg-chestTarget').value     = state.communalChestTarget || 1000;
+    document.getElementById('cfg-rustDays').value        = s.rustDays || 7;
+    document.getElementById('cfg-rustPercent').value     = s.rustPercent || 5;
+    document.getElementById('cfg-weekGenre').value       = s.weeklyThemeGenre || 'Historia';
+    document.getElementById('cfg-weekMultiplier').value  = s.weeklyThemeBonus || 2;
+    const tog = document.getElementById('toggle-weekly');
+    tog.classList.toggle('on', !!s.weeklyThemeActive);
+  }
+
+  function toggleWeekly() {
+    const tog = document.getElementById('toggle-weekly');
+    tog.classList.toggle('on');
+  }
+
+  function saveEconomy() {
+    const state = loadState();
+    state.settings.coinName        = document.getElementById('cfg-coinName').value.trim() || 'Talento';
+    state.settings.exchangeRate    = +document.getElementById('cfg-exchangeRate').value;
+    state.settings.coinsPerPage    = +document.getElementById('cfg-coinsPerPage').value;
+    state.communalChestTarget      = +document.getElementById('cfg-chestTarget').value;
+    saveState(state); showToast('Economía guardada', 'success');
+  }
+
+  function saveDiscipline() {
+    const state = loadState();
+    state.settings.rustDays    = +document.getElementById('cfg-rustDays').value;
+    state.settings.rustPercent = +document.getElementById('cfg-rustPercent').value;
+    saveState(state); showToast('Reglas de disciplina guardadas', 'success');
+  }
+
+  function saveWeekly() {
+    const state = loadState();
+    state.settings.weeklyThemeActive = document.getElementById('toggle-weekly').classList.contains('on');
+    state.settings.weeklyThemeGenre  = document.getElementById('cfg-weekGenre').value;
+    state.settings.weeklyThemeBonus  = +document.getElementById('cfg-weekMultiplier').value;
+    saveState(state); showToast('Semana temática guardada', 'success');
+  }
+
+  // Child CRUD
+  function openAddChild() {
+    document.getElementById('child-modal-title').textContent = 'Nuevo Lector';
+    document.getElementById('edit-child-id').value = '';
+    document.getElementById('child-name').value    = '';
+    document.getElementById('child-avatar').value  = '';
+    selectedContract = 'normal';
+    selectContract('normal');
+    buildColorPicker(null);
+    openModal('modal-child');
+  }
+
+  function editChild(id) {
+    const state = loadState();
+    const c = getChild(state, id);
+    if (!c) return;
+    document.getElementById('child-modal-title').textContent = 'Editar Lector';
+    document.getElementById('edit-child-id').value = id;
+    document.getElementById('child-name').value    = c.name;
+    document.getElementById('child-avatar').value  = c.avatar;
+    selectedContract = c.contract || 'normal';
+    selectContract(selectedContract);
+    buildColorPicker(c.color);
+    openModal('modal-child');
+  }
+
+  function saveChild() {
+    const name = document.getElementById('child-name').value.trim();
+    if (!name) { showToast('Escribe un nombre', 'error'); return; }
+    const state = loadState();
+    const id    = document.getElementById('edit-child-id').value;
+    const avatar = (document.getElementById('child-avatar').value.trim() || name[0]).toUpperCase();
+
+    if (id) {
+      const c = getChild(state, id);
+      if (c) { c.name = name; c.avatar = avatar; c.color = selectedColor; c.contract = selectedContract; }
+    } else {
+      const c = createChild(name, avatar, selectedColor);
+      c.contract = selectedContract;
+      state.children.push(c);
+    }
+    saveState(state);
+    closeModal('modal-child');
+    renderChildren();
+    showToast(id ? 'Perfil actualizado' : 'Perfil creado', 'success');
+  }
+
+  function deleteChild(id) {
+    if (!confirm('¿Eliminar este perfil? Se perderán todos sus datos.')) return;
+    const state = loadState();
+    state.children      = state.children.filter(c => c.id !== id);
+    state.transactions  = state.transactions.filter(t => t.childId !== id);
+    state.books         = (state.books || []).filter(b => b.childId !== id);
+    state.goals         = (state.goals || []).filter(g => g.childId !== id);
+    saveState(state);
+    renderChildren();
+    showToast('Perfil eliminado');
+  }
+
+  // Data import/export
+  function exportData() {
+    const state = loadState();
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `bibliocoins_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    showToast('Datos exportados', 'success');
+  }
+
+  function importData() { document.getElementById('import-file').click(); }
+
+  function doImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        localStorage.setItem('bibliocoins_v1', JSON.stringify(data));
+        showToast('Datos importados', 'success');
+        setTimeout(() => location.reload(), 800);
+      } catch { showToast('Error al importar', 'error'); }
+    };
+    reader.readAsText(file);
+  }
+
+  function confirmReset() {
+    if (prompt('Escribe BORRAR para confirmar') === 'BORRAR') {
+      localStorage.removeItem('bibliocoins_v1');
+      showToast('Datos eliminados');
+      setTimeout(() => location.reload(), 800);
+    }
+  }
+
+  // Init
+  document.querySelector('[onclick="BC.openModal(\'modal-child\')"]').onclick = openAddChild;
+  buildColorPicker(null);
+  renderChildren();
+  loadSettings();
+</script>
+</body>
+</html>

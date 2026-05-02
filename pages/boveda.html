@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Bóveda</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .vault-hero {
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .vault-hero::after {
+      content: '🏦';
+      position: absolute; right: 20px; bottom: -4px;
+      font-size: 5rem; opacity: 0.12;
+    }
+    .vault-hero-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .vault-hero-balance {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem; font-weight: 700;
+      line-height: 1; margin: 8px 0 4px;
+    }
+    .vault-hero-clp { font-size: 0.9rem; opacity: 0.75; }
+    .vault-hero-stats { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+    .vault-hero-stat { font-size: 0.8rem; opacity: 0.75; }
+    .vault-hero-stat strong { display: block; font-size: 1.05rem; opacity: 1; }
+
+    .goal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .goal-card-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; }
+    .goal-progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem; color: var(--text-muted); margin-bottom: 5px;
+    }
+    .goal-pages-left { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+    .goal-actions { margin-top: 10px; display: flex; gap: 6px; }
+
+    .tx-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .tx-row:last-child { border-bottom:none; }
+    .tx-icon { font-size:1.1rem; width:28px; text-align:center; flex-shrink:0; }
+    .tx-desc { flex:1; font-size:0.88rem; }
+    .tx-type { font-size:0.72rem; color:var(--text-muted); }
+    .tx-amount { font-weight:700; font-size:0.9rem; }
+    .tx-date { font-size:0.72rem; color:var(--text-muted); }
+
+    .exchange-box {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .exchange-box input { max-width: 120px; }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html" class="active">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Bóveda Personal</div>
+    <div class="page-subtitle">Saldos, metas de ahorro y conversión a dinero real</div>
+  </div>
+
+  <!-- SELECTOR DE NIÑO -->
+  <div class="child-pills" id="child-pills"></div>
+
+  <!-- VAULT HERO -->
+  <div class="vault-hero" id="vault-hero" style="background: linear-gradient(135deg, #2E5B3C, #1a3d27);">
+    <div class="vault-hero-name" id="vh-name">—</div>
+    <div class="vault-hero-balance" id="vh-balance">◈ 0</div>
+    <div class="vault-hero-clp" id="vh-clp">≈ $0 CLP</div>
+    <div class="vault-hero-stats">
+      <div class="vault-hero-stat"><strong id="vh-earned">0</strong>Total ganado</div>
+      <div class="vault-hero-stat"><strong id="vh-pages">0</strong>Páginas leídas</div>
+      <div class="vault-hero-stat"><strong id="vh-level">1</strong>Nivel actual</div>
+      <div class="vault-hero-stat"><strong id="vh-contract">Normal</strong>Contrato</div>
+    </div>
+  </div>
+
+  <!-- CONVERSIÓN -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">💵 Conversión a dinero real</div>
+    <div class="exchange-box">
+      <div style="font-size:0.88rem; font-weight:500;">Canjear</div>
+      <input class="form-input" id="exchange-amount" type="number" min="1" placeholder="Monedas">
+      <div style="font-size:0.88rem; color:var(--text-muted);">= <strong id="exchange-result">$0</strong> CLP</div>
+      <button class="btn btn-gold btn-sm" onclick="doExchange()">Canjear</button>
+    </div>
+    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:8px;" id="exchange-rate-label"></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- METAS DE AHORRO -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">🎯 Metas de Ahorro</div>
+        <button class="btn btn-primary btn-sm" onclick="BC.openModal('modal-goal')">+ Meta</button>
+      </div>
+      <div id="goals-list">
+        <div class="empty-state"><div class="empty-icon">🎯</div>Sin metas activas</div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="card">
+      <div class="card-title">📋 Historial de Transacciones</div>
+      <div id="tx-list">
+        <div class="empty-state"><div class="empty-icon">📋</div>Sin movimientos aún</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL META -->
+<div class="modal-overlay" id="modal-goal">
+  <div class="modal">
+    <div class="modal-title">Nueva Meta de Ahorro</div>
+    <div class="form-group">
+      <label class="form-label">¿Qué quiero comprar?</label>
+      <input class="form-input" id="goal-name" type="text" placeholder="Ej: Nintendo Switch">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Costo en monedas internas (◈)</label>
+      <input class="form-input" id="goal-cost" type="number" min="1" placeholder="500">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-goal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveGoal()">Crear meta</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, getChild, addTransaction, formatCoin, formatCLP, formatDate, relativeTime, uid, showToast, openModal, closeModal, getAvatarColor } = BC;
+
+  let currentChildId = null;
+
+  // ── URL param ──
+  const urlParams = new URLSearchParams(location.search);
+  const paramChild = urlParams.get('child');
+
+  function init() {
+    const state = loadState();
+    renderPills(state);
+
+    if (paramChild && state.children.find(c => c.id === paramChild)) {
+      selectChild(paramChild);
+    } else if (state.children.length > 0) {
+      selectChild(state.children[0].id);
+    }
+  }
+
+  function renderPills(state) {
+    const pills = document.getElementById('child-pills');
+    pills.innerHTML = '';
+    state.children.forEach((c, idx) => {
+      const color = c.color || getAvatarColor(idx);
+      const pill = document.createElement('div');
+      pill.className = 'child-pill' + (c.id === currentChildId ? ' selected' : '');
+      pill.innerHTML = `<div class="avatar" style="width:26px;height:26px;font-size:0.8rem;background:${color}20;color:${color};">${c.avatar}</div> ${c.name}`;
+      pill.onclick = () => selectChild(c.id);
+      pills.appendChild(pill);
+    });
+  }
+
+  function selectChild(id) {
+    currentChildId = id;
+    const state = loadState();
+    renderPills(state);
+    renderVault(state);
+    renderGoals(state);
+    renderTx(state);
+  }
+
+  function renderVault(state) {
+    const child = getChild(state, currentChildId);
+    if (!child) return;
+    const idx   = state.children.indexOf(child);
+    const color = child.color || getAvatarColor(idx);
+    const hero  = document.getElementById('vault-hero');
+    hero.style.background = `linear-gradient(135deg, ${color}, ${color}aa)`;
+    document.getElementById('vh-name').textContent     = child.name;
+    document.getElementById('vh-balance').textContent  = '◈ ' + child.balance.toLocaleString('es-CL');
+    document.getElementById('vh-clp').textContent      = '≈ ' + formatCLP(child.balance, state);
+    document.getElementById('vh-earned').textContent   = '◈ ' + child.totalEarned.toLocaleString('es-CL');
+    document.getElementById('vh-pages').textContent    = child.totalPages.toLocaleString('es-CL');
+    document.getElementById('vh-level').textContent    = child.level;
+    document.getElementById('vh-contract').textContent = { easy:'Fácil', normal:'Normal', hard:'Difícil' }[child.contract] || 'Normal';
+
+    const rate = state.settings.exchangeRate || 500;
+    document.getElementById('exchange-rate-label').textContent =
+      `Tasa: 1 ◈ = $${rate.toLocaleString('es-CL')} CLP · Saldo disponible: ◈ ${child.balance.toLocaleString('es-CL')}`;
+
+    document.getElementById('exchange-amount').oninput = function() {
+      const val = +this.value || 0;
+      document.getElementById('exchange-result').textContent =
+        '$' + (val * rate).toLocaleString('es-CL');
+    };
+  }
+
+  function renderGoals(state) {
+    const goals = (state.goals || []).filter(g => g.childId === currentChildId && !g.completed);
+    const child = getChild(state, currentChildId);
+    const list  = document.getElementById('goals-list');
+    if (goals.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎯</div>Sin metas activas</div>';
+      return;
+    }
+    const cpp = BC.getCoinsPerPage(state, child);
+    list.innerHTML = goals.map(g => {
+      const saved   = Math.min(g.saved || 0, g.cost);
+      const pct     = Math.round(saved / g.cost * 100);
+      const remaining = g.cost - saved;
+      const pagesLeft = cpp > 0 ? Math.ceil(remaining / cpp) : '?';
+      return `
+        <div class="goal-card" style="margin-bottom:10px;">
+          <div class="goal-card-name">🎯 ${g.name}</div>
+          <div class="goal-progress-label">
+            <span>◈ ${saved.toLocaleString('es-CL')} / ${g.cost.toLocaleString('es-CL')}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-fill gold" style="width:${pct}%"></div></div>
+          <div class="goal-pages-left">Faltan aprox. <strong>${pagesLeft}</strong> páginas</div>
+          <div class="goal-actions">
+            <button class="btn btn-gold btn-sm" onclick="saveToGoal('${g.id}')">Ahorrar</button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteGoal('${g.id}')">Eliminar</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderTx(state) {
+    const txs = (state.transactions || []).filter(t => t.childId === currentChildId).slice(0, 30);
+    const list = document.getElementById('tx-list');
+    if (txs.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Sin movimientos aún</div>';
+      return;
+    }
+    const icons = { page:'📖', bonus:'⭐', fine:'⚖️', goal:'🎯', market:'🏪', rust:'🍂', heroic:'🦸', cultural:'🎭', exchange:'💵' };
+    list.innerHTML = txs.map(tx => {
+      const plus = tx.amount >= 0;
+      return `
+        <div class="tx-row">
+          <div class="tx-icon">${icons[tx.type] || '◈'}</div>
+          <div class="tx-desc">
+            <div>${tx.description}</div>
+            <div class="tx-type">${tx.type} · ${relativeTime(tx.date)}</div>
+          </div>
+          <div>
+            <div class="tx-amount" style="color:${plus ? 'var(--accent)' : 'var(--red)'}">
+              ${plus ? '+' : ''}${tx.amount} ◈
+            </div>
+            <div class="tx-date">Saldo: ◈ ${tx.balanceAfter?.toLocaleString('es-CL') ?? '—'}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function doExchange() {
+    const amount = +document.getElementById('exchange-amount').value;
+    if (!amount || amount <= 0) { showToast('Ingresa una cantidad válida', 'error'); return; }
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    if (!child) return;
+    if (child.balance < amount) { showToast('Saldo insuficiente', 'error'); return; }
+    const rate = state.settings.exchangeRate || 500;
+    addTransaction(state, currentChildId, -amount, 'exchange',
+      `Canje a dinero real: $${(amount * rate).toLocaleString('es-CL')} CLP`);
+    saveState(state);
+    renderVault(state);
+    renderTx(state);
+    showToast(`Canje exitoso: $${(amount * rate).toLocaleString('es-CL')} CLP`, 'gold');
+    document.getElementById('exchange-amount').value = '';
+    document.getElementById('exchange-result').textContent = '$0';
+  }
+
+  function saveGoal() {
+    const name = document.getElementById('goal-name').value.trim();
+    const cost = +document.getElementById('goal-cost').value;
+    if (!name || !cost) { showToast('Completa todos los campos', 'error'); return; }
+    const state = loadState();
+    if (!state.goals) state.goals = [];
+    state.goals.push({ id: uid(), childId: currentChildId, name, cost, saved: 0, completed: false,
+      createdAt: new Date().toISOString() });
+    saveState(state);
+    closeModal('modal-goal');
+    renderGoals(state);
+    showToast('Meta creada', 'success');
+  }
+
+  function saveToGoal(goalId) {
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    const goal  = state.goals.find(g => g.id === goalId);
+    if (!child || !goal) return;
+    const needed = goal.cost - goal.saved;
+    const amount = Math.min(needed, child.balance);
+    if (amount <= 0) { showToast('Sin monedas disponibles o meta completa'); return; }
+    addTransaction(state, currentChildId, -amount, 'goal', `Ahorro hacia: ${goal.name}`);
+    goal.saved += amount;
+    if (goal.saved >= goal.cost) {
+      goal.completed = true;
+      showToast(`¡Meta "${goal.name}" completada! 🎉`, 'gold');
+    } else {
+      showToast(`◈ ${amount} guardados para ${goal.name}`, 'success');
+    }
+    saveState(state);
+    renderVault(state);
+    renderGoals(state);
+    renderTx(state);
+  }
+
+  function deleteGoal(goalId) {
+    const state = loadState();
+    state.goals = state.goals.filter(g => g.id !== goalId);
+    saveState(state);
+    renderGoals(state);
+    showToast('Meta eliminada');
+  }
+
+  init();
+</script>
+</body>
+</html>

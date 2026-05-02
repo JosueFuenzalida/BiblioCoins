@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Lectura</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .reading-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width:640px) { .reading-form { grid-template-columns: 1fr; } }
+
+    .quick-register {
+      background: linear-gradient(135deg, var(--accent), #1a3d27);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+    .quick-register h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; margin-bottom: 16px;
+    }
+    .quick-register .form-label { color: rgba(255,255,255,0.7); }
+    .quick-register .form-input,
+    .quick-register .form-select {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.25);
+      color: #fff;
+    }
+    .quick-register .form-input::placeholder { color: rgba(255,255,255,0.4); }
+    .quick-register .form-input:focus,
+    .quick-register .form-select:focus {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.6);
+    }
+    .quick-register .form-select option { color: var(--text); background: #fff; }
+    .earn-preview {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      font-size: 0.88rem;
+    }
+    .earn-preview .earn-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; font-weight: 700;
+      color: var(--gold-lt);
+    }
+
+    .book-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .book-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .book-info { flex: 1; }
+    .book-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; }
+    .book-meta  { font-size: 0.78rem; color: var(--text-muted); }
+    .book-prog  { margin-top: 8px; }
+    .book-prog-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+    .book-actions { display: flex; flex-direction: column; gap: 6px; }
+
+    .bonus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 10px; }
+    .bonus-btn {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .bonus-btn:hover { border-color: var(--gold); box-shadow: var(--shadow); }
+    .bonus-btn .bicon { font-size: 1.5rem; margin-bottom: 6px; }
+    .bonus-btn .bname { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+    .bonus-btn .bamount { font-size: 0.8rem; color: var(--gold); font-weight: 700; }
+    .bonus-btn .bdesc { font-size: 0.72rem; color: var(--text-muted); }
+
+    .theme-banner {
+      background: linear-gradient(90deg, var(--gold) 0%, #e8c86a 100%);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+      font-size: 0.88rem; font-weight: 600; color: var(--text);
+    }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html" class="active">Lectura</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Registro de Lectura</div>
+    <div class="page-subtitle">Páginas leídas, libros y bonos de desempeño</div>
+  </div>
+
+  <!-- SELECTOR -->
+  <div class="child-pills" id="child-pills"></div>
+
+  <!-- SEMANA TEMÁTICA -->
+  <div id="theme-banner" style="display:none" class="theme-banner">
+    📅 <span id="theme-text">Semana de Historia · Las páginas de este género pagan ×2</span>
+  </div>
+
+  <!-- REGISTRO RÁPIDO -->
+  <div class="quick-register">
+    <h2>📖 Registrar Lectura</h2>
+    <div class="reading-form">
+      <div class="form-group">
+        <label class="form-label">Libro</label>
+        <select class="form-select" id="reading-book">
+          <option value="">— Ninguno / Libre —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Género</label>
+        <select class="form-select" id="reading-genre">
+          <option>Historia</option>
+          <option>Ciencia</option>
+          <option>Poesía</option>
+          <option>Aventura</option>
+          <option>Geografía</option>
+          <option>Biografías</option>
+          <option>Naturaleza</option>
+          <option>Fantasía</option>
+          <option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Páginas leídas hoy</label>
+        <input class="form-input" id="reading-pages" type="number" min="1" placeholder="20" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas (opcional)</label>
+        <input class="form-input" id="reading-note" type="text" placeholder="¿De qué trató?">
+      </div>
+    </div>
+    <div class="earn-preview" id="earn-preview">
+      <div style="opacity:.7; font-size:.8rem; margin-bottom:4px;">Ganarías:</div>
+      <div class="earn-val" id="earn-val">◈ 0</div>
+      <div style="opacity:.6; font-size:.75rem; margin-top:2px;" id="earn-breakdown"></div>
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn btn-gold" onclick="registerReading()" style="color:var(--text);">Registrar y cobrar</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- LIBROS -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">📚 Mis Libros</div>
+        <button class="btn btn-primary btn-sm" onclick="BC.openModal('modal-book')">+ Libro</button>
+      </div>
+      <div id="books-list">
+        <div class="empty-state"><div class="empty-icon">📚</div>Sin libros registrados</div>
+      </div>
+    </div>
+
+    <!-- BONOS ESPECIALES -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">⭐ Bonos de Desempeño</div>
+        <div class="bonus-grid" id="bonus-grid"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL LIBRO -->
+<div class="modal-overlay" id="modal-book">
+  <div class="modal">
+    <div class="modal-title">Agregar Libro</div>
+    <div class="form-group">
+      <label class="form-label">Título del libro</label>
+      <input class="form-input" id="book-title" type="text" placeholder="Ej: El Principito">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Autor (opcional)</label>
+      <input class="form-input" id="book-author" type="text" placeholder="Saint-Exupéry">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Total de páginas</label>
+      <input class="form-input" id="book-pages" type="number" min="1" placeholder="96">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Género</label>
+      <select class="form-select" id="book-genre">
+        <option>Historia</option><option>Ciencia</option><option>Poesía</option>
+        <option>Aventura</option><option>Geografía</option><option>Biografías</option>
+        <option>Naturaleza</option><option>Fantasía</option><option>Otro</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-book')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBook()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BONO -->
+<div class="modal-overlay" id="modal-bonus">
+  <div class="modal">
+    <div class="modal-title" id="bonus-modal-title">Registrar Bono</div>
+    <input type="hidden" id="bonus-type">
+    <input type="hidden" id="bonus-base">
+    <div class="form-group">
+      <label class="form-label">Descripción (opcional)</label>
+      <input class="form-input" id="bonus-note" type="text" placeholder="¿Qué hizo bien?">
+    </div>
+    <div id="bonus-grade-group" class="form-group" style="display:none">
+      <label class="form-label">Nota obtenida</label>
+      <input class="form-input" id="bonus-grade" type="number" step="0.1" min="1" max="7" placeholder="6.5">
+    </div>
+    <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom:8px;" id="bonus-preview"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-bonus')">Cancelar</button>
+      <button class="btn btn-gold" onclick="applyBonus()" style="color:var(--text)">Otorgar bono</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, getChild, addTransaction, getCoinsPerPage, addXP, fillCommunalChest,
+    uid, showToast, openModal, closeModal, getAvatarColor, formatCoin } = BC;
+
+  let currentChildId = null;
+
+  const BONUSES = [
+    { type:'grade',    icon:'🎓', name:'Nota excelente',   desc:'Sobre 6.0 en una prueba', base: 80,  hasGrade: true },
+    { type:'book',     icon:'📕', name:'Libro completo',   desc:'Terminar un libro',       base: 100 },
+    { type:'heroic',   icon:'🦸', name:'Acción Heroica',   desc:'Honestidad, ayuda espontánea', base: 60 },
+    { type:'cultural', icon:'🎭', name:'Acto Cultural',    desc:'Cueca, teatro, etc.',     base: 80 },
+    { type:'school',   icon:'🏫', name:'Logro Escolar',    desc:'Felicitación, participación', base: 50 },
+  ];
+
+  function init() {
+    const state = loadState();
+    renderPills(state);
+    renderBonuses(state);
+
+    // theme banner
+    const s = state.settings;
+    if (s.weeklyThemeActive) {
+      document.getElementById('theme-banner').style.display = 'flex';
+      document.getElementById('theme-text').textContent =
+        `📅 Semana de ${s.weeklyThemeGenre} · Las páginas de este género pagan ×${s.weeklyThemeBonus}`;
+      // Set genre select
+      document.getElementById('reading-genre').value = s.weeklyThemeGenre;
+    }
+
+    if (state.children.length > 0) selectChild(state.children[0].id);
+  }
+
+  function renderPills(state) {
+    const pills = document.getElementById('child-pills');
+    pills.innerHTML = '';
+    state.children.forEach((c, idx) => {
+      const color = c.color || getAvatarColor(idx);
+      const pill = document.createElement('div');
+      pill.className = 'child-pill' + (c.id === currentChildId ? ' selected' : '');
+      pill.innerHTML = `<div class="avatar" style="width:26px;height:26px;font-size:.8rem;background:${color}20;color:${color};">${c.avatar}</div> ${c.name}`;
+      pill.onclick = () => selectChild(c.id);
+      pills.appendChild(pill);
+    });
+  }
+
+  function selectChild(id) {
+    currentChildId = id;
+    const state = loadState();
+    renderPills(state);
+    renderBooks(state);
+    populateBookSelect(state);
+    updatePreview();
+  }
+
+  function renderBonuses(state) {
+    const grid = document.getElementById('bonus-grid');
+    grid.innerHTML = BONUSES.map(b => `
+      <div class="bonus-btn" onclick="openBonusModal('${b.type}', ${b.base}, '${b.name}', ${!!b.hasGrade})">
+        <div class="bicon">${b.icon}</div>
+        <div class="bname">${b.name}</div>
+        <div class="bamount">+◈ ${b.base}</div>
+        <div class="bdesc">${b.desc}</div>
+      </div>
+    `).join('');
+  }
+
+  function openBonusModal(type, base, name, hasGrade) {
+    document.getElementById('bonus-type').value   = type;
+    document.getElementById('bonus-base').value   = base;
+    document.getElementById('bonus-modal-title').textContent = `Bono: ${name}`;
+    document.getElementById('bonus-note').value   = '';
+    document.getElementById('bonus-grade').value  = '';
+    document.getElementById('bonus-grade-group').style.display = hasGrade ? '' : 'none';
+    document.getElementById('bonus-preview').textContent =
+      hasGrade ? `Bono base: ◈ ${base} · Con nota ≥6.5 obtiene +50% extra` :
+                 `Se otorgarán ◈ ${base} al niño seleccionado`;
+    openModal('modal-bonus');
+  }
+
+  function applyBonus() {
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const state = loadState();
+    const type  = document.getElementById('bonus-type').value;
+    let amount  = +document.getElementById('bonus-base').value;
+    const note  = document.getElementById('bonus-note').value.trim();
+    const grade = +document.getElementById('bonus-grade').value;
+
+    if (type === 'grade' && grade >= 6.5) amount = Math.round(amount * 1.5);
+
+    const child = getChild(state, currentChildId);
+    addTransaction(state, currentChildId, amount, type === 'grade' ? 'bonus' : type,
+      note || (BONUSES.find(b => b.type === type)?.name || 'Bono'));
+    addXP(child, Math.round(amount / 2));
+    fillCommunalChest(state, Math.round(amount * 0.1));
+    saveState(state);
+    closeModal('modal-bonus');
+    showToast(`+◈ ${amount} otorgados a ${child.name}! 🎉`, 'gold');
+    renderBooks(state);
+  }
+
+  function populateBookSelect(state) {
+    const sel = document.getElementById('reading-book');
+    const books = (state.books || []).filter(b => b.childId === currentChildId && !b.completed);
+    sel.innerHTML = '<option value="">— Ninguno / Libre —</option>';
+    books.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = `${b.title} (${b.pagesRead}/${b.totalPages})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function updatePreview() {
+    if (!currentChildId) return;
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    if (!child) return;
+    const pages = +document.getElementById('reading-pages').value || 0;
+    const cpp   = getCoinsPerPage(state, child);
+
+    const s       = state.settings;
+    const genre   = document.getElementById('reading-genre').value;
+    let multiplier = 1;
+    if (s.weeklyThemeActive && genre === s.weeklyThemeGenre) multiplier = s.weeklyThemeBonus || 2;
+
+    const earned = pages * cpp * multiplier;
+    document.getElementById('earn-val').textContent = `◈ ${earned.toLocaleString('es-CL')}`;
+    let breakdown = `${pages} págs × ◈${cpp}`;
+    if (multiplier > 1) breakdown += ` × ${multiplier} (tema)`;
+    document.getElementById('earn-breakdown').textContent = breakdown;
+  }
+
+  function registerReading() {
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const pages = +document.getElementById('reading-pages').value;
+    if (!pages || pages < 1) { showToast('Ingresa las páginas leídas', 'error'); return; }
+
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    const cpp   = getCoinsPerPage(state, child);
+    const genre = document.getElementById('reading-genre').value;
+    const note  = document.getElementById('reading-note').value.trim();
+    const bookId = document.getElementById('reading-book').value;
+
+    const s = state.settings;
+    let multiplier = 1;
+    if (s.weeklyThemeActive && genre === s.weeklyThemeGenre) multiplier = s.weeklyThemeBonus || 2;
+
+    const earned = pages * cpp * multiplier;
+    const desc = `${pages} páginas${bookId ? '' : ' libres'}${note ? ` — ${note}` : ''}`;
+
+    addTransaction(state, currentChildId, earned, 'page', desc);
+    child.totalPages  += pages;
+    child.lastActivity = new Date().toISOString();
+    addXP(child, pages);
+    fillCommunalChest(state, Math.round(earned * 0.1));
+
+    // Update book progress
+    if (bookId) {
+      const book = (state.books || []).find(b => b.id === bookId);
+      if (book) {
+        book.pagesRead = Math.min(book.totalPages, (book.pagesRead || 0) + pages);
+        if (book.pagesRead >= book.totalPages && !book.completed) {
+          book.completed = true;
+          const finishBonus = 100;
+          addTransaction(state, currentChildId, finishBonus, 'bonus', `¡Libro terminado! "${book.title}"`);
+          showToast(`¡Libro "${book.title}" completado! +◈${finishBonus} extra`, 'gold');
+        }
+      }
+    }
+
+    saveState(state);
+    renderBooks(state);
+    populateBookSelect(state);
+    showToast(`+◈ ${earned} ganados por ${pages} páginas`, 'success');
+
+    document.getElementById('reading-pages').value = '';
+    document.getElementById('reading-note').value  = '';
+    updatePreview();
+  }
+
+  function renderBooks(state) {
+    const books = (state.books || []).filter(b => b.childId === currentChildId);
+    const list  = document.getElementById('books-list');
+    if (books.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div>Sin libros registrados</div>';
+      return;
+    }
+    list.innerHTML = books.map(b => {
+      const pct = Math.round((b.pagesRead || 0) / b.totalPages * 100);
+      return `
+        <div class="book-card" style="margin-bottom:10px; ${b.completed ? 'opacity:.65' : ''}">
+          <div class="book-icon">${b.completed ? '✅' : '📖'}</div>
+          <div class="book-info">
+            <div class="book-title">${b.title}</div>
+            <div class="book-meta">${b.author ? b.author + ' · ' : ''}${b.genre} · ${b.totalPages} págs</div>
+            <div class="book-prog">
+              <div class="book-prog-label"><span>${b.pagesRead || 0} / ${b.totalPages}</span><span>${pct}%</span></div>
+              <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+            </div>
+          </div>
+          <div class="book-actions">
+            ${!b.completed ? `<button class="btn btn-ghost btn-sm" onclick="deleteBook('${b.id}')">✕</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function saveBook() {
+    const title = document.getElementById('book-title').value.trim();
+    const pages = +document.getElementById('book-pages').value;
+    if (!title || !pages) { showToast('Completa título y páginas', 'error'); return; }
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const state = loadState();
+    if (!state.books) state.books = [];
+    state.books.push({
+      id: uid(), childId: currentChildId,
+      title, author: document.getElementById('book-author').value.trim(),
+      genre: document.getElementById('book-genre').value,
+      totalPages: pages, pagesRead: 0, completed: false,
+      createdAt: new Date().toISOString()
+    });
+    saveState(state);
+    BC.closeModal('modal-book');
+    renderBooks(state);
+    populateBookSelect(state);
+    showToast('Libro agregado', 'success');
+  }
+
+  function deleteBook(id) {
+    const state = loadState();
+    state.books = state.books.filter(b => b.id !== id);
+    saveState(state);
+    renderBooks(state);
+    populateBookSelect(state);
+    showToast('Libro eliminado');
+  }
+
+  document.getElementById('reading-genre').onchange = updatePreview;
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Árbol del Conocimiento</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .tree-page { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+
+    .tree-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .tree-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .tree-level {
+      font-size: .82rem; color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    #tree-svg { max-width: 340px; width: 100%; }
+
+    .tree-legend {
+      display: flex; gap: 16px; justify-content: center;
+      flex-wrap: wrap; margin-top: 16px; font-size: .78rem; color: var(--text-muted);
+    }
+    .tree-legend span::before { content: '● '; }
+    .tree-legend .l-green::before { color: #4A8A60; }
+    .tree-legend .l-yellow::before { color: #E8C86A; }
+    .tree-legend .l-red::before { color: #C0392B; }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width:640px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+
+    .level-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .level-card-title {
+      font-size: .78rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .05em;
+      margin-bottom: 10px;
+    }
+    .xp-row { display: flex; justify-content: space-between; font-size: .8rem; color: var(--text-muted); margin-bottom: 5px; }
+
+    .history-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: .88rem;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .h-icon { font-size: 1.1rem; width: 26px; text-align: center; }
+    .h-desc { flex: 1; }
+    .h-amount { font-weight: 700; }
+    .h-amount.plus  { color: var(--accent); }
+    .h-amount.minus { color: var(--red); }
+    .h-date { font-size: .72rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html" class="active">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="tree-page">
+  <div class="page-header">
+    <div class="page-title">Árbol del Conocimiento</div>
+    <div class="page-subtitle">Tu progreso como lector, visualizado</div>
+  </div>
+
+  <div class="child-pills" id="child-pills"></div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-box"><div class="stat-val" id="st-pages">0</div><div class="stat-lbl">Páginas leídas</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-balance" style="color:var(--gold)">◈ 0</div><div class="stat-lbl">Saldo actual</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-level">1</div><div class="stat-lbl">Nivel</div></div>
+    <div class="stat-box"><div class="stat-val" id="st-books">0</div><div class="stat-lbl">Libros terminados</div></div>
+  </div>
+
+  <div class="grid-2">
+    <!-- ÁRBOL SVG -->
+    <div class="tree-wrapper">
+      <div class="tree-name" id="tree-child-name">—</div>
+      <div class="tree-level" id="tree-child-level">Nivel 1 · 0 XP</div>
+      <svg id="tree-svg" viewBox="0 0 280 320" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="tree-legend">
+        <span class="l-green">Hojas de lectura</span>
+        <span class="l-yellow">Frutos de bono</span>
+        <span class="l-red">Ramas secas (multas)</span>
+      </div>
+    </div>
+
+    <!-- XP + HISTORIAL -->
+    <div>
+      <div class="card level-card" style="margin-bottom:16px;">
+        <div class="level-card-title">Progreso de Nivel</div>
+        <div class="xp-row"><span id="xp-label">XP</span><span id="xp-pct">0%</span></div>
+        <div class="progress-wrap" style="height:10px;">
+          <div class="progress-fill" id="xp-bar" style="width:0%"></div>
+        </div>
+        <div style="font-size:.78rem; color:var(--text-muted); margin-top:8px;" id="xp-sub">
+          0 / 100 XP para nivel 2
+        </div>
+        <hr class="divider" style="margin:14px 0;">
+        <div class="level-card-title">Contrato activo</div>
+        <div id="contract-info" style="font-size:.88rem;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Últimos movimientos</div>
+        <div id="history-list">
+          <div class="empty-state"><div class="empty-icon">📋</div>Sin actividad aún</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../js/core.js"></script>
+<script>
+const { loadState, getChild, getAvatarColor, relativeTime } = BC;
+let currentChildId = null;
+
+function init() {
+  const state = loadState();
+  renderPills(state);
+  if (state.children.length > 0) selectChild(state.children[0].id);
+}
+
+function renderPills(state) {
+  const pills = document.getElementById('child-pills');
+  pills.innerHTML = '';
+  state.children.forEach((c, idx) => {
+    const color = c.color || getAvatarColor(idx);
+    const pill = document.createElement('div');
+    pill.className = 'child-pill' + (c.id === currentChildId ? ' selected' : '');
+    pill.innerHTML = `<div class="avatar" style="width:26px;height:26px;font-size:.8rem;background:${color}20;color:${color};">${c.avatar}</div> ${c.name}`;
+    pill.onclick = () => selectChild(c.id);
+    pills.appendChild(pill);
+  });
+}
+
+function selectChild(id) {
+  currentChildId = id;
+  const state = loadState();
+  renderPills(state);
+  renderAll(state);
+}
+
+function renderAll(state) {
+  const child = getChild(state, currentChildId);
+  if (!child) return;
+
+  // Stats
+  document.getElementById('st-pages').textContent   = child.totalPages.toLocaleString('es-CL');
+  document.getElementById('st-balance').textContent = '◈ ' + child.balance.toLocaleString('es-CL');
+  document.getElementById('st-level').textContent   = child.level;
+  const books = (state.books || []).filter(b => b.childId === currentChildId && b.completed).length;
+  document.getElementById('st-books').textContent   = books;
+
+  // XP bar
+  const needed = child.level * 100;
+  const pct    = Math.min(100, Math.round((child.xp / needed) * 100));
+  document.getElementById('xp-label').textContent   = `XP Nivel ${child.level}`;
+  document.getElementById('xp-pct').textContent     = `${pct}%`;
+  document.getElementById('xp-bar').style.width     = pct + '%';
+  document.getElementById('xp-sub').textContent     = `${child.xp} / ${needed} XP para nivel ${child.level + 1}`;
+
+  // Contract
+  const contractDesc = {
+    easy:   '🌱 Modo Fácil — ×0.7 monedas/pág, multas leves',
+    normal: '⚖️ Modo Normal — ×1.0 monedas/pág, reglas estándar',
+    hard:   '🔥 Modo Difícil — ×1.6 monedas/pág, multas severas',
+  }[child.contract] || '—';
+  document.getElementById('contract-info').textContent = contractDesc;
+
+  // Tree header
+  const idx   = state.children.indexOf(child);
+  document.getElementById('tree-child-name').textContent  = child.name;
+  document.getElementById('tree-child-level').textContent = `Nivel ${child.level} · ${child.xp} XP`;
+
+  // Draw tree
+  drawTree(state, child);
+
+  // History
+  renderHistory(state);
+}
+
+function drawTree(state, child) {
+  const svg = document.getElementById('tree-svg');
+
+  // Compute health: pages => leaves, fines => damage, bonuses => fruits
+  const txs    = (state.transactions || []).filter(t => t.childId === child.id);
+  const pages  = child.totalPages;
+  const fines  = txs.filter(t => t.type === 'fine' || t.type === 'rust').length;
+  const bonuses= txs.filter(t => ['bonus','heroic','cultural'].includes(t.type)).length;
+  const books  = (state.books || []).filter(b => b.childId === currentChildId && b.completed).length;
+
+  // Health 0–100
+  const health = Math.max(0, Math.min(100,
+    Math.min(100, pages * 0.5) - fines * 5 + bonuses * 3
+  ));
+
+  // Trunk color by health
+  const trunkColor = health > 60 ? '#8B5E3C' : health > 30 ? '#A0785A' : '#BFA07A';
+  // Leaf density
+  const leafCount = Math.min(40, Math.floor(pages / 5) + books * 4);
+  const driedLeaves = Math.min(10, fines * 2);
+  const fruitCount = Math.min(8, bonuses);
+
+  const W = 280, H = 320;
+  const trunkX = W / 2;
+  const trunkBaseY = H - 20;
+  const trunkTopY  = H - 130;
+
+  let d = `<defs>
+    <radialGradient id="skyGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#EAF4EC"/>
+      <stop offset="100%" stop-color="#F5F2EC"/>
+    </radialGradient>
+  </defs>`;
+
+  // Sky background
+  d += `<rect width="${W}" height="${H}" fill="url(#skyGrad)" rx="12"/>`;
+
+  // Ground
+  d += `<ellipse cx="${trunkX}" cy="${trunkBaseY + 6}" rx="60" ry="10" fill="#C8B89A" opacity=".4"/>`;
+
+  // Trunk
+  const trunkW = 18 + Math.min(10, child.level * 1.5);
+  d += `<path d="M${trunkX - trunkW/2} ${trunkBaseY} 
+    C${trunkX - trunkW/2} ${trunkBaseY - 40} ${trunkX - trunkW/3} ${trunkTopY + 30} ${trunkX} ${trunkTopY}
+    C${trunkX + trunkW/3} ${trunkTopY + 30} ${trunkX + trunkW/2} ${trunkBaseY - 40} ${trunkX + trunkW/2} ${trunkBaseY} Z"
+    fill="${trunkColor}"/>`;
+
+  // Branches
+  const branchColor = health > 50 ? '#6B4423' : '#A89070';
+  const branches = [
+    { x1: trunkX, y1: trunkTopY + 20, x2: trunkX - 60, y2: trunkTopY - 30 },
+    { x1: trunkX, y1: trunkTopY + 10, x2: trunkX + 55, y2: trunkTopY - 25 },
+    { x1: trunkX, y1: trunkTopY + 30, x2: trunkX - 35, y2: trunkTopY - 60 },
+    { x1: trunkX, y1: trunkTopY + 30, x2: trunkX + 38, y2: trunkTopY - 65 },
+    { x1: trunkX, y1: trunkTopY + 15, x2: trunkX,      y2: trunkTopY - 70 },
+  ];
+  branches.forEach(b => {
+    d += `<line x1="${b.x1}" y1="${b.y1}" x2="${b.x2}" y2="${b.y2}" 
+      stroke="${branchColor}" stroke-width="4" stroke-linecap="round"/>`;
+  });
+
+  // Leaf cluster (canopy)
+  const canopyY = trunkTopY - 40;
+  const canopyR = 30 + Math.min(50, pages * 0.3 + books * 8);
+  const canopyColor = health > 70 ? '#3A7D52' : health > 40 ? '#6BAA72' : '#A8B87A';
+  const canopyColor2 = health > 70 ? '#4A9460' : health > 40 ? '#7DBD83' : '#B8C88A';
+
+  d += `<ellipse cx="${trunkX - 28}" cy="${canopyY - 10}" rx="${canopyR * .8}" ry="${canopyR * .75}" fill="${canopyColor}" opacity=".9"/>`;
+  d += `<ellipse cx="${trunkX + 25}" cy="${canopyY - 5}"  rx="${canopyR * .75}" ry="${canopyR * .7}" fill="${canopyColor2}" opacity=".9"/>`;
+  d += `<ellipse cx="${trunkX}"      cy="${canopyY - 30}" rx="${canopyR * .85}" ry="${canopyR * .8}" fill="${canopyColor}" opacity=".95"/>`;
+
+  // Individual leaves (scattered)
+  const rng = mulberry32(child.id.charCodeAt(0) * 100);
+  for (let i = 0; i < Math.min(leafCount, 30); i++) {
+    const angle = rng() * Math.PI * 2;
+    const r     = rng() * canopyR * .9;
+    const lx    = trunkX + Math.cos(angle) * r;
+    const ly    = canopyY - 15 + Math.sin(angle) * r * .7;
+    const sz    = 5 + rng() * 5;
+    const lc    = ['#3D8B56','#4A9C60','#5BAD6E','#6BBD7E'][Math.floor(rng() * 4)];
+    d += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="${sz}" ry="${(sz*.6).toFixed(1)}" 
+      fill="${lc}" opacity="${(.6 + rng()*.4).toFixed(2)}"
+      transform="rotate(${(rng()*60-30).toFixed(0)},${lx.toFixed(1)},${ly.toFixed(1)})"/>`;
+  }
+
+  // Dried leaves (fines)
+  for (let i = 0; i < Math.min(driedLeaves, 8); i++) {
+    const angle = rng() * Math.PI * 2;
+    const r     = canopyR * (.5 + rng() * .5);
+    const lx    = trunkX + Math.cos(angle) * r;
+    const ly    = canopyY + Math.sin(angle) * r * .6;
+    d += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="6" ry="3.5"
+      fill="#C4682B" opacity="${(.5 + rng()*.3).toFixed(2)}"
+      transform="rotate(${(rng()*80-40).toFixed(0)},${lx.toFixed(1)},${ly.toFixed(1)})"/>`;
+  }
+
+  // Fruits (bonuses)
+  for (let i = 0; i < Math.min(fruitCount, 8); i++) {
+    const angle = rng() * Math.PI * 2;
+    const r     = canopyR * .4 + rng() * canopyR * .4;
+    const fx    = trunkX + Math.cos(angle) * r;
+    const fy    = canopyY - 10 + Math.sin(angle) * r * .65;
+    const fc    = ['#E8C86A','#F0A830','#D4A020'][Math.floor(rng()*3)];
+    d += `<circle cx="${fx.toFixed(1)}" cy="${fy.toFixed(1)}" r="5" fill="${fc}"/>`;
+    d += `<line x1="${fx.toFixed(1)}" y1="${fy.toFixed(1)}" x2="${fx.toFixed(1)}" y2="${(fy-6).toFixed(1)}" stroke="#5A3A1A" stroke-width="1.2"/>`;
+  }
+
+  // Falling leaves (animation)
+  if (driedLeaves > 0) {
+    for (let i = 0; i < 3; i++) {
+      const lx = trunkX - 60 + rng() * 120;
+      const ly = trunkBaseY - 20 - rng() * 60;
+      d += `<ellipse cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" rx="5" ry="3" fill="#C4682B" opacity=".4"
+        transform="rotate(${(rng()*40).toFixed(0)},${lx.toFixed(1)},${ly.toFixed(1)})"/>`;
+    }
+  }
+
+  // Stars for high level
+  if (child.level >= 5) {
+    for (let i = 0; i < Math.min(child.level - 4, 5); i++) {
+      const sx = 20 + rng() * (W - 40);
+      const sy = 10 + rng() * 40;
+      d += `<text x="${sx.toFixed(0)}" y="${sy.toFixed(0)}" font-size="10" opacity=".5">⭐</text>`;
+    }
+  }
+
+  // Health bar
+  const hColor = health > 60 ? '#4A8A60' : health > 30 ? '#E8A020' : '#C0392B';
+  d += `<rect x="20" y="${H-14}" width="240" height="6" rx="3" fill="#E0DAD0"/>`;
+  d += `<rect x="20" y="${H-14}" width="${(240*health/100).toFixed(0)}" height="6" rx="3" fill="${hColor}"/>`;
+  d += `<text x="20" y="${H-20}" font-family="DM Sans,sans-serif" font-size="9" fill="#7A7568">Salud del árbol ${Math.round(health)}%</text>`;
+
+  svg.innerHTML = d;
+}
+
+// Deterministic pseudo-random (seeded)
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function renderHistory(state) {
+  const txs  = (state.transactions || []).filter(t => t.childId === currentChildId).slice(0, 12);
+  const list = document.getElementById('history-list');
+  if (txs.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div>Sin actividad aún</div>';
+    return;
+  }
+  const icons = { page:'📖', bonus:'⭐', fine:'⚖️', goal:'🎯', market:'🏪',
+                  rust:'🍂', heroic:'🦸', cultural:'🎭', exchange:'💵' };
+  list.innerHTML = txs.map(tx => {
+    const plus = tx.amount >= 0;
+    return `
+      <div class="history-item">
+        <div class="h-icon">${icons[tx.type] || '◈'}</div>
+        <div class="h-desc">${tx.description}</div>
+        <div class="h-amount ${plus ? 'plus' : 'minus'}">${plus ? '+' : ''}${tx.amount} ◈</div>
+        <div class="h-date">${relativeTime(tx.date)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Mercado</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .market-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex; flex-direction: column;
+      transition: var(--transition);
+    }
+    .market-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .market-icon { font-size: 2rem; margin-bottom: 10px; }
+    .market-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .market-desc { font-size: 0.8rem; color: var(--text-muted); flex: 1; margin-bottom: 12px; }
+    .market-price {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700; color: var(--gold);
+      font-size: 1.15rem; margin-bottom: 10px;
+    }
+    .market-stock { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+    .market-buy { margin-top: auto; }
+
+    .cart-empty { text-align:center; padding:32px; color:var(--text-muted); font-size:.9rem; }
+    .receipt-item { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+    .receipt-item:last-child { border-bottom:none; }
+    .receipt-total { display:flex; justify-content:space-between; font-weight:700; padding-top:10px; font-family:'Playfair Display',serif; }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="mercado.html" class="active">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Mercado de Privilegios</div>
+    <div class="page-subtitle">Canjea talentos por cupones y beneficios especiales</div>
+  </div>
+
+  <div class="child-pills" id="child-pills"></div>
+
+  <!-- SALDO -->
+  <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+    <div class="stat-box" style="flex:1; text-align:left; padding:14px 20px;">
+      <div style="font-size:.78rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px;">Saldo disponible</div>
+      <div style="font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; color:var(--gold);" id="balance-display">◈ 0</div>
+    </div>
+    <button class="btn btn-primary" onclick="BC.openModal('modal-new-item')">+ Agregar item</button>
+  </div>
+
+  <!-- GRID ITEMS -->
+  <div class="grid-auto" id="market-grid"></div>
+
+</main>
+
+<!-- MODAL NUEVO ITEM -->
+<div class="modal-overlay" id="modal-new-item">
+  <div class="modal">
+    <div class="modal-title">Nuevo Item del Mercado</div>
+    <div class="form-group">
+      <label class="form-label">Emoji / Ícono</label>
+      <input class="form-input" id="item-icon" type="text" maxlength="2" placeholder="🎮">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre del privilegio</label>
+      <input class="form-input" id="item-name" type="text" placeholder="Ej: 30 min extra de pantalla">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción</label>
+      <input class="form-input" id="item-desc" type="text" placeholder="¿En qué consiste?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Precio (◈ Talentos)</label>
+      <input class="form-input" id="item-price" type="number" min="1" placeholder="50">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Stock (0 = ilimitado)</label>
+      <input class="form-input" id="item-stock" type="number" min="0" value="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-new-item')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveItem()" style="color:var(--text)">Agregar al mercado</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPRAR -->
+<div class="modal-overlay" id="modal-buy">
+  <div class="modal">
+    <div class="modal-title" id="buy-title">Canjear privilegio</div>
+    <input type="hidden" id="buy-item-id">
+    <div id="buy-details" style="font-size:.88rem; color:var(--text-muted); margin-bottom:16px;"></div>
+    <div style="background:var(--surface2); border-radius:10px; padding:14px; font-size:.88rem;">
+      <div class="receipt-item"><span>Saldo actual</span><span id="buy-balance">◈ 0</span></div>
+      <div class="receipt-item"><span>Costo del privilegio</span><span id="buy-cost" style="color:var(--red)">-◈ 0</span></div>
+      <div class="receipt-total"><span>Saldo restante</span><span id="buy-remaining" style="color:var(--accent)">◈ 0</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-buy')">Cancelar</button>
+      <button class="btn btn-gold" onclick="confirmBuy()" style="color:var(--text)">Confirmar canje</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, getChild, addTransaction, uid, showToast, openModal, closeModal, getAvatarColor } = BC;
+
+  let currentChildId = null;
+
+  const DEFAULT_ITEMS = [
+    { id: 'di1', icon:'📺', name:'30 min extra de pantalla', desc:'TV, tablet o consola fuera del horario', price:40, stock:0, unlimited:true },
+    { id: 'di2', icon:'🍕', name:'Elegir la cena', desc:'Tú decides qué se cocina esta noche', price:60, stock:0, unlimited:true },
+    { id: 'di3', icon:'😴', name:'Dormir 30 min más tarde', desc:'Una vez a la semana', price:50, stock:0, unlimited:true },
+    { id: 'di4', icon:'🎮', name:'Videojuego 1 hora extra', desc:'Un viernes o sábado', price:80, stock:0, unlimited:true },
+    { id: 'di5', icon:'🍦', name:'Helado a elección', desc:'La próxima salida al supermercado', price:30, stock:0, unlimited:true },
+    { id: 'di6', icon:'🚗', name:'Paseo especial', desc:'Tú eliges dónde ir el fin de semana', price:200, stock:1, unlimited:false },
+  ];
+
+  function init() {
+    const state = loadState();
+    // Load default items if none exist
+    if (!state.marketItems || state.marketItems.length === 0) {
+      state.marketItems = DEFAULT_ITEMS.map(i => ({...i}));
+      saveState(state);
+    }
+    renderPills(state);
+    if (state.children.length > 0) selectChild(state.children[0].id);
+  }
+
+  function renderPills(state) {
+    const pills = document.getElementById('child-pills');
+    pills.innerHTML = '';
+    state.children.forEach((c, idx) => {
+      const color = c.color || getAvatarColor(idx);
+      const pill = document.createElement('div');
+      pill.className = 'child-pill' + (c.id === currentChildId ? ' selected' : '');
+      pill.innerHTML = `<div class="avatar" style="width:26px;height:26px;font-size:.8rem;background:${color}20;color:${color};">${c.avatar}</div> ${c.name}`;
+      pill.onclick = () => selectChild(c.id);
+      pills.appendChild(pill);
+    });
+  }
+
+  function selectChild(id) {
+    currentChildId = id;
+    const state = loadState();
+    renderPills(state);
+    const child = getChild(state, currentChildId);
+    document.getElementById('balance-display').textContent =
+      child ? `◈ ${child.balance.toLocaleString('es-CL')}` : '◈ 0';
+    renderMarket(state);
+  }
+
+  function renderMarket(state) {
+    const grid  = document.getElementById('market-grid');
+    const items = state.marketItems || [];
+    const child = getChild(state, currentChildId);
+    const balance = child?.balance || 0;
+
+    if (items.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🏪</div>El mercado está vacío</div>';
+      return;
+    }
+
+    grid.innerHTML = items.map(item => {
+      const canAfford = balance >= item.price;
+      const outOfStock = !item.unlimited && item.stock <= 0;
+      return `
+        <div class="market-item ${outOfStock ? 'opacity:0.5' : ''}">
+          <div class="market-icon">${item.icon || '🎁'}</div>
+          <div class="market-name">${item.name}</div>
+          <div class="market-desc">${item.desc || ''}</div>
+          <div class="market-price">◈ ${item.price.toLocaleString('es-CL')}</div>
+          ${!item.unlimited ? `<div class="market-stock">Stock: ${item.stock}</div>` : '<div class="market-stock">Ilimitado</div>'}
+          <div class="market-buy" style="display:flex; gap:6px;">
+            <button class="btn btn-gold btn-sm" style="flex:1; color:var(--text);"
+              onclick="openBuy('${item.id}')"
+              ${!canAfford || outOfStock ? 'disabled style="opacity:.4; cursor:not-allowed; flex:1; color:var(--text);"' : ''}>
+              ${outOfStock ? 'Sin stock' : !canAfford ? 'Monedas insuficientes' : 'Canjear'}
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="deleteItem('${item.id}')">✕</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openBuy(itemId) {
+    const state = loadState();
+    const item  = state.marketItems.find(i => i.id === itemId);
+    const child = getChild(state, currentChildId);
+    if (!item || !child) return;
+    document.getElementById('buy-item-id').value       = itemId;
+    document.getElementById('buy-title').textContent   = `Canjear: ${item.name}`;
+    document.getElementById('buy-details').textContent = item.desc || '';
+    document.getElementById('buy-balance').textContent = `◈ ${child.balance.toLocaleString('es-CL')}`;
+    document.getElementById('buy-cost').textContent    = `-◈ ${item.price.toLocaleString('es-CL')}`;
+    const remaining = child.balance - item.price;
+    document.getElementById('buy-remaining').textContent = `◈ ${remaining.toLocaleString('es-CL')}`;
+    openModal('modal-buy');
+  }
+
+  function confirmBuy() {
+    const itemId = document.getElementById('buy-item-id').value;
+    const state  = loadState();
+    const item   = state.marketItems.find(i => i.id === itemId);
+    const child  = getChild(state, currentChildId);
+    if (!item || !child) return;
+    if (child.balance < item.price) { showToast('Saldo insuficiente', 'error'); return; }
+    addTransaction(state, currentChildId, -item.price, 'market', `Compra: ${item.name}`);
+    if (!item.unlimited && item.stock > 0) item.stock--;
+    saveState(state);
+    closeModal('modal-buy');
+    selectChild(currentChildId);
+    showToast(`✅ Canjeado: ${item.name}`, 'gold');
+  }
+
+  function saveItem() {
+    const name  = document.getElementById('item-name').value.trim();
+    const price = +document.getElementById('item-price').value;
+    if (!name || !price) { showToast('Completa nombre y precio', 'error'); return; }
+    const state = loadState();
+    if (!state.marketItems) state.marketItems = [];
+    const stock = +document.getElementById('item-stock').value;
+    state.marketItems.push({
+      id: uid(),
+      icon:  document.getElementById('item-icon').value.trim() || '🎁',
+      name, desc: document.getElementById('item-desc').value.trim(),
+      price, stock, unlimited: stock === 0,
+    });
+    saveState(state);
+    closeModal('modal-new-item');
+    renderMarket(state);
+    showToast('Item agregado al mercado', 'success');
+  }
+
+  function deleteItem(id) {
+    const state = loadState();
+    state.marketItems = state.marketItems.filter(i => i.id !== id);
+    saveState(state);
+    renderMarket(state);
+    showToast('Item eliminado');
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Disciplina</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .fine-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--red);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .fine-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .fine-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .fine-card-name { font-weight: 600; font-size: 0.92rem; }
+    .fine-card-amount { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--red); font-size: 1.1rem; }
+    .fine-card-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .fine-card-repent { font-size: 0.75rem; color: var(--accent); margin-top: 6px; font-weight: 500; }
+
+    .repent-button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-lt));
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      width: 100%;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .repent-button:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .repent-button::before { content: '🙏 '; }
+
+    .pending-fine {
+      background: var(--surface);
+      border: 1px solid var(--red-lt);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 8px;
+    }
+    .pending-fine-info { flex: 1; }
+    .pending-fine-desc { font-size: 0.88rem; font-weight: 500; }
+    .pending-fine-amount { font-family: 'Playfair Display', serif; font-weight: 700; color: var(--red); }
+    .pending-fine-actions { display: flex; gap: 6px; }
+  </style>
+</head>
+<body>
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="disciplina.html" class="active">Disciplina</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Sistema de Disciplina</div>
+    <div class="page-subtitle">Multas, arrepentimiento y control de conducta</div>
+  </div>
+
+  <!-- SELECTOR -->
+  <div class="child-pills" id="child-pills"></div>
+
+  <div class="grid-2">
+    <!-- MULTAS DISPONIBLES -->
+    <div>
+      <div class="card">
+        <div class="card-title">⚖️ Multas de Conducta</div>
+        <div id="fines-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">✍️ Multa Personalizada</div>
+        <div class="form-group">
+          <label class="form-label">Descripción</label>
+          <input class="form-input" id="custom-desc" type="text" placeholder="Ej: No hizo las tareas">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto (◈)</label>
+          <input class="form-input" id="custom-amount" type="number" min="1" placeholder="20">
+        </div>
+        <button class="btn btn-danger" onclick="applyCustomFine()">Aplicar multa</button>
+      </div>
+    </div>
+
+    <!-- ARREPENTIMIENTO + HISTORIAL MULTAS -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">🙏 Botón de Arrepentimiento</div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px; line-height:1.5;">
+          Si el niño reconoce su error honestamente y de manera proactiva,
+          puede solicitar reducir la multa hasta en un 50%.
+        </p>
+        <button class="repent-button" onclick="openRepent()">
+          Pedir perdón y reducir multa
+        </button>
+        <div style="font-size:0.75rem; color:var(--text-muted); text-align:center;">
+          Solo puede usarse una vez por multa
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Multas Pendientes / Recientes</div>
+        <div id="pending-fines">
+          <div class="empty-state"><div class="empty-icon">✅</div>Sin multas registradas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL ARREPENTIMIENTO -->
+<div class="modal-overlay" id="modal-repent">
+  <div class="modal">
+    <div class="modal-title">🙏 Botón de Arrepentimiento</div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
+      Selecciona la multa que quieres reconocer y escribe lo que pasó con tus propias palabras.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Multa a reducir</label>
+      <select class="form-select" id="repent-fine-select"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">¿Qué hiciste mal y por qué no lo harás de nuevo?</label>
+      <textarea class="form-textarea" id="repent-text" placeholder="Escribe aquí tu reconocimiento honesto..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Reducción aprobada por los padres</label>
+      <select class="form-select" id="repent-reduction">
+        <option value="0.25">25% de descuento</option>
+        <option value="0.5" selected>50% de descuento</option>
+        <option value="1">Perdonar totalmente</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="BC.closeModal('modal-repent')">Cancelar</button>
+      <button class="btn btn-primary" onclick="applyRepentance()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+  const { loadState, saveState, getChild, addTransaction, uid, showToast, openModal, closeModal, getAvatarColor } = BC;
+
+  let currentChildId = null;
+
+  const FINES = [
+    { type:'fine', icon:'🤬', name:'Palabrota',        base: 10, desc:'Lenguaje inapropiado' },
+    { type:'fine', icon:'📝', name:'Reprensión escolar', base:30, desc:'Anotación o citación' },
+    { type:'fine', icon:'😤', name:'Mal comportamiento', base:20, desc:'Desobediencia o agresividad' },
+    { type:'fine', icon:'🤥', name:'Mentira comprobada', base:40, desc:'Falta de honestidad' },
+    { type:'fine', icon:'🗑', name:'No ordenó su pieza',  base:15, desc:'Desorden reiterado' },
+    { type:'fine', icon:'📵', name:'Uso excesivo pantallas', base:25, desc:'Superó el límite acordado' },
+  ];
+
+  function init() {
+    const state = loadState();
+    renderPills(state);
+    renderFinesGrid(state);
+    if (state.children.length > 0) selectChild(state.children[0].id);
+  }
+
+  function renderPills(state) {
+    const pills = document.getElementById('child-pills');
+    pills.innerHTML = '';
+    state.children.forEach((c, idx) => {
+      const color = c.color || getAvatarColor(idx);
+      const pill = document.createElement('div');
+      pill.className = 'child-pill' + (c.id === currentChildId ? ' selected' : '');
+      pill.innerHTML = `<div class="avatar" style="width:26px;height:26px;font-size:.8rem;background:${color}20;color:${color};">${c.avatar}</div> ${c.name}`;
+      pill.onclick = () => selectChild(c.id);
+      pills.appendChild(pill);
+    });
+  }
+
+  function renderFinesGrid(state) {
+    const grid = document.getElementById('fines-grid');
+    grid.innerHTML = FINES.map((f, i) => {
+      // Hard contract = 1.5x fine
+      const multiplierLabel = '';
+      return `
+        <div class="fine-card" onclick="applyFine(${i})">
+          <div class="fine-card-top">
+            <div>
+              <div style="font-size:1.3rem; margin-bottom:4px;">${f.icon}</div>
+              <div class="fine-card-name">${f.name}</div>
+            </div>
+            <div class="fine-card-amount">-◈${f.base}</div>
+          </div>
+          <div class="fine-card-desc">${f.desc}</div>
+          <div class="fine-card-repent">Puede reducirse con arrepentimiento</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function selectChild(id) {
+    currentChildId = id;
+    const state = loadState();
+    renderPills(state);
+    renderPendingFines(state);
+  }
+
+  function applyFine(idx) {
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    const f     = FINES[idx];
+    let amount  = f.base;
+    if (child.contract === 'hard') amount = Math.round(amount * 1.5);
+
+    addTransaction(state, currentChildId, -amount, 'fine', f.name);
+    // Record fine as pending-repentable
+    if (!state.pendingFines) state.pendingFines = [];
+    state.pendingFines.push({
+      id: uid(), childId: currentChildId,
+      desc: f.name, amount, applied: true, forgiven: false,
+      date: new Date().toISOString()
+    });
+    saveState(state);
+    renderPendingFines(state);
+    showToast(`Multa aplicada: -◈${amount} a ${child.name}`, 'error');
+  }
+
+  function applyCustomFine() {
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const desc   = document.getElementById('custom-desc').value.trim();
+    const amount = +document.getElementById('custom-amount').value;
+    if (!desc || !amount) { showToast('Completa los campos', 'error'); return; }
+    const state = loadState();
+    const child = getChild(state, currentChildId);
+    addTransaction(state, currentChildId, -amount, 'fine', desc);
+    if (!state.pendingFines) state.pendingFines = [];
+    state.pendingFines.push({
+      id: uid(), childId: currentChildId,
+      desc, amount, applied: true, forgiven: false,
+      date: new Date().toISOString()
+    });
+    saveState(state);
+    renderPendingFines(state);
+    showToast(`Multa personalizada: -◈${amount} a ${child.name}`, 'error');
+    document.getElementById('custom-desc').value   = '';
+    document.getElementById('custom-amount').value = '';
+  }
+
+  function renderPendingFines(state) {
+    const fines = (state.pendingFines || [])
+      .filter(f => f.childId === currentChildId)
+      .slice(0, 10);
+    const el = document.getElementById('pending-fines');
+    if (fines.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div>Sin multas registradas</div>';
+      return;
+    }
+    el.innerHTML = fines.map(f => `
+      <div class="pending-fine">
+        <div style="font-size:1.2rem;">${f.forgiven ? '✅' : '⚖️'}</div>
+        <div class="pending-fine-info">
+          <div class="pending-fine-desc">${f.desc}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">${BC.relativeTime(f.date)}</div>
+        </div>
+        <div class="pending-fine-amount">
+          ${f.forgiven ? '<span style="text-decoration:line-through; opacity:.5;">-◈' + f.amount + '</span> <span class="badge badge-green">Perdonada</span>' : '-◈' + f.amount}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openRepent() {
+    if (!currentChildId) { showToast('Selecciona un niño', 'error'); return; }
+    const state = loadState();
+    const fines = (state.pendingFines || [])
+      .filter(f => f.childId === currentChildId && !f.forgiven);
+    if (fines.length === 0) { showToast('No hay multas activas para este niño', 'error'); return; }
+    const sel = document.getElementById('repent-fine-select');
+    sel.innerHTML = fines.map(f =>
+      `<option value="${f.id}">${f.desc} (-◈${f.amount})</option>`
+    ).join('');
+    document.getElementById('repent-text').value = '';
+    openModal('modal-repent');
+  }
+
+  function applyRepentance() {
+    const text      = document.getElementById('repent-text').value.trim();
+    if (!text) { showToast('El reconocimiento no puede estar vacío', 'error'); return; }
+    const fineId    = document.getElementById('repent-fine-select').value;
+    const reduction = +document.getElementById('repent-reduction').value;
+    const state     = loadState();
+    const fine      = (state.pendingFines || []).find(f => f.id === fineId);
+    if (!fine) return;
+
+    const refund = reduction === 1 ? fine.amount : Math.round(fine.amount * reduction);
+    fine.forgiven = true;
+    addTransaction(state, currentChildId, refund, 'fine',
+      `Arrepentimiento aceptado — devuelto ◈${refund} de multa "${fine.desc}"`);
+    saveState(state);
+    closeModal('modal-repent');
+    renderPendingFines(state);
+    showToast(`Arrepentimiento aceptado: +◈${refund} devueltos`, 'success');
+  }
+
+  init();
+</script>
+</body>
+</html>
