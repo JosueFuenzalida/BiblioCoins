@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Inicio</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2E5B3C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BiblioCoins">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <style>
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #1a3d27 100%);
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: 36px 32px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '◈';
+      position: absolute; right: 24px; bottom: -8px;
+      font-size: 8rem; opacity: 0.06;
+      font-family: 'Playfair Display', serif;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700;
+      letter-spacing: -0.03em; margin-bottom: 6px;
+    }
+    .hero-title span { color: var(--gold-lt); }
+    .hero-sub { font-size: 0.9rem; opacity: 0.75; }
+    .hero-meta { margin-top: 20px; display: flex; gap: 24px; flex-wrap: wrap; }
+    .hero-meta-item { font-size: 0.8rem; opacity: 0.7; }
+    .hero-meta-item strong { font-size: 1.2rem; display: block; opacity: 1; font-family: 'Playfair Display', serif; }
+
+    .child-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .child-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .child-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .child-card-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; }
+    .child-card-level { font-size: 0.78rem; color: var(--text-muted); }
+    .child-card-balance { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+    .child-card-clp { font-size: 0.8rem; color: var(--text-muted); }
+    .child-card-bar { margin-top: 14px; }
+    .child-card-bar-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; }
+    .child-contract-badge { margin-top: 12px; }
+    .captain-crown { font-size: 1.1rem; }
+
+    .nav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .nav-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-decoration: none;
+      color: var(--text);
+      display: flex; flex-direction: column; gap: 8px;
+      transition: var(--transition);
+    }
+    .nav-tile:hover { box-shadow: var(--shadow-md); border-color: var(--accent); }
+    .nav-tile-icon { font-size: 1.5rem; }
+    .nav-tile-name { font-weight: 600; font-size: 0.9rem; }
+    .nav-tile-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
+    .communal-bar-wrap { margin-top: 16px; }
+    .communal-bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .communal-label { font-size: 0.88rem; font-weight: 600; }
+    .communal-amount { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); }
+
+    .activity-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .activity-dot.plus  { background: var(--accent); }
+    .activity-dot.minus { background: var(--red); }
+    .activity-desc { font-size: 0.88rem; flex: 1; }
+    .activity-desc .who { font-weight: 600; }
+    .activity-amount { font-weight: 600; font-size: 0.88rem; white-space: nowrap; }
+    .activity-amount.plus  { color: var(--accent); }
+    .activity-amount.minus { color: var(--red); }
+    .activity-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+
+    .empty-setup {
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+    }
+    .empty-setup h2 { font-family: 'Playfair Display', serif; margin-bottom: 8px; }
+    .empty-setup p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <a class="topbar-brand" href="index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="index.html" class="active">Inicio</a>
+    <a href="pages/boveda.html">Bóveda</a>
+    <a href="pages/lectura.html">Lectura</a>
+    <a href="pages/mercado.html">Mercado</a>
+    <a href="pages/equipo.html">Equipo</a>
+    <a href="pages/arbol.html">Árbol</a>
+    <a href="pages/admin.html">⚙ Config</a>
+  </div>
+</nav>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<main class="page">
+
+  <!-- HERO -->
+  <div class="hero" id="hero-section">
+    <div class="hero-title">Biblio<span>Coins</span></div>
+    <div class="hero-sub">Economía familiar · Lectura · Valores</div>
+    <div class="hero-meta" id="hero-meta">
+      <div class="hero-meta-item"><strong id="hm-total">—</strong>Talento total en circulación</div>
+      <div class="hero-meta-item"><strong id="hm-pages">—</strong>Páginas leídas</div>
+      <div class="hero-meta-item"><strong id="hm-children">—</strong>Lectores activos</div>
+    </div>
+  </div>
+
+  <!-- SETUP VACÍO -->
+  <div class="empty-setup" id="empty-setup" style="display:none">
+    <div style="font-size:3rem; margin-bottom:12px">📚</div>
+    <h2>Bienvenido a BiblioCoins</h2>
+    <p>Configura los perfiles de tus hijos para comenzar.</p>
+    <a href="pages/admin.html" class="btn btn-primary">Ir a Configuración →</a>
+  </div>
+
+  <!-- PERFILES -->
+  <section id="children-section">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h2 style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700;">Lectores</h2>
+      <a href="pages/admin.html" class="btn btn-ghost btn-sm">+ Agregar</a>
+    </div>
+    <div class="grid-auto" id="children-grid"></div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- NAVE DE SECCIONES -->
+  <section>
+    <h2 style="font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin-bottom:16px;">Módulos</h2>
+    <div class="nav-grid">
+      <a href="pages/boveda.html" class="nav-tile">
+        <div class="nav-tile-icon">🏦</div>
+        <div class="nav-tile-name">Bóveda</div>
+        <div class="nav-tile-desc">Saldos, metas de ahorro y canje a dinero real</div>
+      </a>
+      <a href="pages/lectura.html" class="nav-tile">
+        <div class="nav-tile-icon">📖</div>
+        <div class="nav-tile-name">Lectura</div>
+        <div class="nav-tile-desc">Registra páginas, libros y bonos de excelencia</div>
+      </a>
+      <a href="pages/disciplina.html" class="nav-tile">
+        <div class="nav-tile-icon">⚖️</div>
+        <div class="nav-tile-name">Disciplina</div>
+        <div class="nav-tile-desc">Multas, arrepentimiento y control de conducta</div>
+      </a>
+      <a href="pages/mercado.html" class="nav-tile">
+        <div class="nav-tile-icon">🏪</div>
+        <div class="nav-tile-name">Mercado</div>
+        <div class="nav-tile-desc">Canjea talentos por privilegios y cupones</div>
+      </a>
+      <a href="pages/equipo.html" class="nav-tile">
+        <div class="nav-tile-icon">🤝</div>
+        <div class="nav-tile-name">Equipo</div>
+        <div class="nav-tile-desc">Cofre comunal, misiones y Capitán de la Semana</div>
+      </a>
+      <a href="pages/arbol.html" class="nav-tile">
+        <div class="nav-tile-icon">🌳</div>
+        <div class="nav-tile-name">Árbol</div>
+        <div class="nav-tile-desc">Visualización del progreso personal</div>
+      </a>
+      <a href="pages/admin.html" class="nav-tile">
+        <div class="nav-tile-icon">⚙️</div>
+        <div class="nav-tile-name">Configuración</div>
+        <div class="nav-tile-desc">Perfiles, tasas, contratos y semana temática</div>
+      </a>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <div class="grid-2">
+    <!-- COFRE COMUNAL -->
+    <div class="card">
+      <div class="card-title">🏆 Cofre del Tesoro Comunal</div>
+      <div class="communal-bar-top">
+        <span class="communal-label" id="chest-label">Sin meta activa</span>
+        <span class="communal-amount" id="chest-amount">◈ 0</span>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-fill gold" id="chest-bar" style="width:0%"></div>
+      </div>
+      <div style="font-size:0.78rem; color:var(--text-muted); margin-top:8px;" id="chest-percent">0% completado</div>
+    </div>
+
+    <!-- ACTIVIDAD RECIENTE -->
+    <div class="card">
+      <div class="card-title">⚡ Actividad Reciente</div>
+      <div id="activity-list">
+        <div class="empty-state" style="padding:16px 0;">
+          <div class="empty-icon">📋</div>
+          Sin transacciones aún
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script src="js/core.js"></script>
+<script>
+  const { loadState, saveState, formatCoin, formatCLP, relativeTime, getAvatarColor, applyRustIfNeeded } = BC;
+
+  function render() {
+    const state = loadState();
+    applyRustIfNeeded(state);
+    saveState(state);
+
+    const children = state.children;
+
+    // Hero stats
+    document.getElementById('hm-total').textContent =
+      '◈ ' + children.reduce((s,c) => s + c.balance, 0).toLocaleString('es-CL');
+    document.getElementById('hm-pages').textContent =
+      children.reduce((s,c) => s + c.totalPages, 0).toLocaleString('es-CL');
+    document.getElementById('hm-children').textContent = children.length;
+
+    // Empty / filled
+    const childrenSection = document.getElementById('children-section');
+    const emptySetup      = document.getElementById('empty-setup');
+    if (children.length === 0) {
+      childrenSection.style.display = 'none';
+      emptySetup.style.display = '';
+    } else {
+      childrenSection.style.display = '';
+      emptySetup.style.display = 'none';
+    }
+
+    // Children grid
+    const grid = document.getElementById('children-grid');
+    grid.innerHTML = '';
+    children.forEach((child, idx) => {
+      const color = child.color || getAvatarColor(idx);
+      const isCapt = state.weekCaptain === child.id;
+      const clpVal = formatCLP(child.balance, state);
+      const xpPct  = Math.min(100, Math.round(child.xp / (child.level * 100) * 100));
+      const contractLabel = { easy: 'Modo Fácil', normal: 'Contrato Normal', hard: 'Modo Difícil' }[child.contract] || 'Normal';
+      const contractClass  = { easy: 'badge-blue', normal: 'badge-gray', hard: 'badge-red' }[child.contract] || 'badge-gray';
+
+      const card = document.createElement('a');
+      card.href = `pages/boveda.html?child=${child.id}`;
+      card.className = 'child-card';
+      card.innerHTML = `
+        <div class="child-card-head">
+          <div class="avatar" style="background:${color}20; color:${color}; border:2px solid ${color}40;">
+            ${child.avatar}
+          </div>
+          <div>
+            <div class="child-card-name">${isCapt ? '<span class="captain-crown">👑 </span>' : ''}${child.name}</div>
+            <div class="child-card-level">Nivel ${child.level} · ${child.totalPages} páginas</div>
+          </div>
+        </div>
+        <div class="child-card-balance">◈ ${child.balance.toLocaleString('es-CL')}</div>
+        <div class="child-card-clp">${clpVal} aprox.</div>
+        <div class="child-card-bar">
+          <div class="child-card-bar-label">
+            <span>XP Nivel ${child.level}</span>
+            <span>${xpPct}%</span>
+          </div>
+          <div class="progress-wrap"><div class="progress-fill" style="width:${xpPct}%; background:${color};"></div></div>
+        </div>
+        <div class="child-contract-badge"><span class="badge ${contractClass}">${contractLabel}</span></div>
+      `;
+      grid.appendChild(card);
+    });
+
+    // Communal chest
+    const pct = state.communalChestTarget > 0
+      ? Math.min(100, Math.round(state.communalChest / state.communalChestTarget * 100))
+      : 0;
+    document.getElementById('chest-amount').textContent  = '◈ ' + state.communalChest.toLocaleString('es-CL');
+    document.getElementById('chest-bar').style.width     = pct + '%';
+    document.getElementById('chest-percent').textContent = `${pct}% · Meta: ◈ ${state.communalChestTarget.toLocaleString('es-CL')}`;
+    document.getElementById('chest-label').textContent   = pct >= 100 ? '¡Meta alcanzada! 🎉' : 'Progreso del equipo';
+
+    // Activity
+    const list = document.getElementById('activity-list');
+    const recent = state.transactions.slice(0, 8);
+    if (recent.length === 0) return;
+    list.innerHTML = recent.map(tx => {
+      const child = state.children.find(c => c.id === tx.childId);
+      const plus = tx.amount >= 0;
+      return `
+        <div class="activity-item">
+          <div class="activity-dot ${plus ? 'plus' : 'minus'}"></div>
+          <div class="activity-desc">
+            <span class="who">${child?.name || '?'}</span> — ${tx.description}
+          </div>
+          <div class="activity-amount ${plus ? 'plus' : 'minus'}">
+            ${plus ? '+' : ''}${tx.amount} ◈
+          </div>
+          <div class="activity-time">${relativeTime(tx.date)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  render();
+
+  // Register Service Worker (PWA)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
