@@ -6,6 +6,528 @@
   <title>BiblioCoins — Configuración</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
+    .tabs { display:flex; gap:4px; border-bottom:1.5px solid var(--border); margin-bottom:24px; flex-wrap:wrap; }
+    .tab-btn {
+      padding:10px 16px; font-family:'DM Sans',sans-serif;
+      font-size:.88rem; font-weight:500; color:var(--text-muted);
+      background:none; border:none; cursor:pointer;
+      border-bottom:2.5px solid transparent; margin-bottom:-1.5px;
+      transition:var(--transition);
+    }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .child-row {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 0; border-bottom:1px solid var(--border);
+    }
+    .child-row:last-child { border-bottom:none; }
+    .child-row-info { flex:1; }
+    .child-row-name { font-weight:600; font-size:.95rem; }
+    .child-row-meta { font-size:.8rem; color:var(--text-muted); }
+    .child-row-actions { display:flex; gap:6px; }
+
+    .color-picker-group { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .color-dot {
+      width:28px; height:28px; border-radius:50%;
+      cursor:pointer; border:2.5px solid transparent; transition:var(--transition);
+    }
+    .color-dot.selected { border-color:var(--text); transform:scale(1.15); }
+
+    .contract-options { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px; }
+    .contract-opt {
+      border:1.5px solid var(--border); border-radius:10px;
+      padding:12px 10px; cursor:pointer; text-align:center; transition:var(--transition);
+    }
+    .co-sel-normal { border-color:var(--accent); background:#e9f2ec; }
+    .co-sel-easy   { border-color:var(--blue);   background:#d6eaf8; }
+    .co-sel-hard   { border-color:var(--red);    background:#fadddb; }
+    .co-icon { font-size:1.3rem; margin-bottom:4px; }
+    .co-name { font-size:.82rem; font-weight:600; }
+    .co-desc { font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+
+    .settings-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0; border-bottom:1px solid var(--border); gap:16px;
+    }
+    .settings-row:last-child { border-bottom:none; }
+    .settings-row-label { font-size:.9rem; font-weight:500; }
+    .settings-row-sub   { font-size:.78rem; color:var(--text-muted); }
+
+    .toggle {
+      width:40px; height:22px; background:var(--border);
+      border-radius:99px; position:relative; cursor:pointer;
+      transition:background .2s; flex-shrink:0; border:none; outline:none;
+    }
+    .toggle::after {
+      content:''; position:absolute; width:16px; height:16px;
+      border-radius:50%; background:#fff; top:3px; left:3px;
+      transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2);
+    }
+    .toggle.on { background:var(--accent); }
+    .toggle.on::after { left:21px; }
+
+    .card.danger { border-color:#F1948A; }
+    .card.danger .card-title { color:var(--red); }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <a class="topbar-brand" href="../index.html">Biblio<span>Coins</span></a>
+  <div class="topbar-nav">
+    <a href="../index.html">Inicio</a>
+    <a href="boveda.html">Bóveda</a>
+    <a href="lectura.html">Lectura</a>
+    <a href="disciplina.html">Disciplina</a>
+    <a href="mercado.html">Mercado</a>
+    <a href="equipo.html">Equipo</a>
+    <a href="arbol.html">Árbol</a>
+    <a href="admin.html" class="active">⚙ Config</a>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<main class="page">
+  <div class="page-header">
+    <div class="page-title">Configuración</div>
+    <div class="page-subtitle">Perfiles, tasas de cambio y reglas del sistema</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="children">👦 Perfiles</button>
+    <button class="tab-btn" data-tab="economy">💰 Economía</button>
+    <button class="tab-btn" data-tab="discipline">⚖️ Disciplina</button>
+    <button class="tab-btn" data-tab="weekly">📅 Semana Temática</button>
+    <button class="tab-btn" data-tab="data">🗃 Datos</button>
+  </div>
+
+  <!-- TAB PERFILES -->
+  <div class="tab-panel active" data-tab="children">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="card-title" style="margin-bottom:0">Lectores registrados</div>
+        <button class="btn btn-primary btn-sm" id="btn-add-child">+ Nuevo perfil</button>
+      </div>
+      <div id="children-list">
+        <div class="empty-state">
+          <div class="empty-icon">👦</div>
+          No hay perfiles aún. Crea el primero arriba.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB ECONOMÍA -->
+  <div class="tab-panel" data-tab="economy">
+    <div class="card">
+      <div class="card-title">Parámetros monetarios</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Nombre de la moneda</div>
+          <div class="settings-row-sub">Cómo se llaman las monedas internas</div>
+        </div>
+        <input class="form-input" id="cfg-coinName" type="text" placeholder="Talento" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Tasa de cambio (CLP)</div>
+          <div class="settings-row-sub">Cuántos pesos vale 1 moneda interna</div>
+        </div>
+        <input class="form-input" id="cfg-exchangeRate" type="number" min="1" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Monedas por página (contrato normal)</div>
+          <div class="settings-row-sub">Base antes de multiplicadores de contrato</div>
+        </div>
+        <input class="form-input" id="cfg-coinsPerPage" type="number" min="1" style="max-width:160px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Meta del cofre comunal (◈)</div>
+          <div class="settings-row-sub">Total de monedas para el premio familiar</div>
+        </div>
+        <input class="form-input" id="cfg-chestTarget" type="number" min="100" style="max-width:160px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" id="btn-save-economy">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB DISCIPLINA -->
+  <div class="tab-panel" data-tab="discipline">
+    <div class="card">
+      <div class="card-title">Impuesto a la flojera (oxidación)</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Días sin actividad hasta oxidar</div>
+          <div class="settings-row-sub">Inactividad antes de cobrar el impuesto</div>
+        </div>
+        <input class="form-input" id="cfg-rustDays" type="number" min="1" max="30" style="max-width:120px">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Porcentaje de oxidación (%)</div>
+          <div class="settings-row-sub">% del saldo que se pierde por inactividad</div>
+        </div>
+        <input class="form-input" id="cfg-rustPercent" type="number" min="1" max="50" style="max-width:120px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" id="btn-save-discipline">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB SEMANA TEMÁTICA -->
+  <div class="tab-panel" data-tab="weekly">
+    <div class="card">
+      <div class="card-title">Semana Temática</div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Activar semana temática</div>
+          <div class="settings-row-sub">Las páginas de este género pagan más</div>
+        </div>
+        <button class="toggle" id="toggle-weekly"></button>
+      </div>
+      <div class="settings-row">
+        <div><div class="settings-row-label">Género de la semana</div></div>
+        <select class="form-select" id="cfg-weekGenre" style="max-width:180px">
+          <option>Historia</option><option>Ciencia</option><option>Poesía</option>
+          <option>Aventura</option><option>Geografía</option><option>Biografías</option>
+          <option>Naturaleza</option><option>Fantasía</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Multiplicador de bono</div>
+          <div class="settings-row-sub">Ej: 2 = paga el doble</div>
+        </div>
+        <input class="form-input" id="cfg-weekMultiplier" type="number" min="1.1" max="5" step="0.1" style="max-width:120px">
+      </div>
+      <div style="margin-top:20px;">
+        <button class="btn btn-primary" id="btn-save-weekly">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB DATOS -->
+  <div class="tab-panel" data-tab="data">
+    <div class="card danger">
+      <div class="card-title">⚠ Respaldo y datos</div>
+      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:20px;line-height:1.6;">
+        Exporta un respaldo antes de cualquier acción destructiva. La importación reemplaza todos los datos actuales.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;">
+        <button class="btn btn-ghost" id="btn-export">📥 Exportar datos (JSON)</button>
+        <button class="btn btn-ghost" id="btn-import">📤 Importar datos (JSON)</button>
+        <button class="btn btn-danger" id="btn-reset">🗑 Borrar todos los datos</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+  </div>
+</main>
+
+<!-- MODAL NUEVO / EDITAR PERFIL -->
+<div class="modal-overlay" id="modal-child">
+  <div class="modal">
+    <div class="modal-title" id="child-modal-title">Nuevo Lector</div>
+    <input type="hidden" id="edit-child-id">
+
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="child-name" type="text" placeholder="Ej: Sofía">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji o inicial del avatar</label>
+      <input class="form-input" id="child-avatar" type="text" maxlength="2" placeholder="S">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color del perfil</label>
+      <div class="color-picker-group" id="color-picker"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contrato inicial</label>
+      <div class="contract-options">
+        <div class="contract-opt" data-c="easy">
+          <div class="co-icon">🌱</div>
+          <div class="co-name">Fácil</div>
+          <div class="co-desc">×0.7 monedas · Multas leves</div>
+        </div>
+        <div class="contract-opt" data-c="normal">
+          <div class="co-icon">⚖️</div>
+          <div class="co-name">Normal</div>
+          <div class="co-desc">×1.0 monedas · Estándar</div>
+        </div>
+        <div class="contract-opt" data-c="hard">
+          <div class="co-icon">🔥</div>
+          <div class="co-name">Difícil</div>
+          <div class="co-desc">×1.6 monedas · Multas duras</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btn-cancel-child">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-child">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/core.js"></script>
+<script>
+const { loadState, saveState, createChild, getChild, showToast, getAvatarColor, AVATAR_COLORS } = BC;
+
+let editingChildId   = null;
+let selectedColor    = AVATAR_COLORS[0];
+let selectedContract = 'normal';
+
+/* ── TABS ─────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`.tab-panel[data-tab="${btn.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+/* ── MODAL ────────────────────────────── */
+const modalEl = document.getElementById('modal-child');
+const openModal  = () => modalEl.classList.add('open');
+const closeModal = () => modalEl.classList.remove('open');
+
+document.getElementById('btn-cancel-child').addEventListener('click', closeModal);
+modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+
+/* ── COLOR PICKER ─────────────────────── */
+function buildColorPicker(activeColor) {
+  const cp = document.getElementById('color-picker');
+  cp.innerHTML = '';
+  selectedColor = activeColor || AVATAR_COLORS[0];
+  AVATAR_COLORS.forEach(c => {
+    const dot = document.createElement('div');
+    dot.className = 'color-dot' + (c === selectedColor ? ' selected' : '');
+    dot.style.background = c;
+    dot.addEventListener('click', () => {
+      selectedColor = c;
+      cp.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+      dot.classList.add('selected');
+    });
+    cp.appendChild(dot);
+  });
+}
+
+/* ── CONTRACT ─────────────────────────── */
+function setContract(c) {
+  selectedContract = c;
+  document.querySelectorAll('.contract-opt').forEach(el => {
+    el.className = 'contract-opt';
+    if (el.dataset.c === c) el.classList.add(`co-sel-${c}`);
+  });
+}
+document.querySelectorAll('.contract-opt').forEach(el =>
+  el.addEventListener('click', () => setContract(el.dataset.c))
+);
+
+/* ── RENDER CHILDREN ──────────────────── */
+function renderChildren() {
+  const state = loadState();
+  const list  = document.getElementById('children-list');
+
+  if (!state.children || state.children.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">👦</div>
+      No hay perfiles aún. Crea el primero arriba.</div>`;
+    return;
+  }
+
+  list.innerHTML = state.children.map((c, idx) => {
+    const color = c.color || getAvatarColor(idx);
+    const cl    = {easy:'Fácil',normal:'Normal',hard:'Difícil'}[c.contract] || 'Normal';
+    return `
+      <div class="child-row">
+        <div class="avatar" style="background:${color}22;color:${color};border:2px solid ${color}55;">
+          ${c.avatar}
+        </div>
+        <div class="child-row-info">
+          <div class="child-row-name">${c.name}</div>
+          <div class="child-row-meta">Nivel ${c.level} &nbsp;·&nbsp; ◈ ${c.balance.toLocaleString('es-CL')} &nbsp;·&nbsp; Contrato ${cl}</div>
+        </div>
+        <div class="child-row-actions">
+          <button class="btn btn-ghost btn-sm" data-edit="${c.id}">Editar</button>
+          <button class="btn btn-danger btn-sm" data-del="${c.id}">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  list.querySelectorAll('[data-edit]').forEach(btn =>
+    btn.addEventListener('click', () => openEditChild(btn.dataset.edit)));
+  list.querySelectorAll('[data-del]').forEach(btn =>
+    btn.addEventListener('click', () => deleteChild(btn.dataset.del)));
+}
+
+/* ── ADD CHILD ────────────────────────── */
+document.getElementById('btn-add-child').addEventListener('click', () => {
+  editingChildId = null;
+  document.getElementById('child-modal-title').textContent = 'Nuevo Lector';
+  document.getElementById('child-name').value   = '';
+  document.getElementById('child-avatar').value = '';
+  buildColorPicker(null);
+  setContract('normal');
+  openModal();
+});
+
+/* ── EDIT CHILD ───────────────────────── */
+function openEditChild(id) {
+  const state = loadState();
+  const c     = getChild(state, id);
+  if (!c) return;
+  editingChildId = id;
+  document.getElementById('child-modal-title').textContent = 'Editar Lector';
+  document.getElementById('child-name').value   = c.name;
+  document.getElementById('child-avatar').value = c.avatar;
+  buildColorPicker(c.color);
+  setContract(c.contract || 'normal');
+  openModal();
+}
+
+/* ── SAVE CHILD ───────────────────────── */
+document.getElementById('btn-save-child').addEventListener('click', () => {
+  const name = document.getElementById('child-name').value.trim();
+  if (!name) { showToast('Escribe un nombre', 'error'); return; }
+  const avatar = (document.getElementById('child-avatar').value.trim() || name[0]).toUpperCase();
+  const state  = loadState();
+
+  if (editingChildId) {
+    const c = getChild(state, editingChildId);
+    if (c) { c.name = name; c.avatar = avatar; c.color = selectedColor; c.contract = selectedContract; }
+    showToast('Perfil actualizado', 'success');
+  } else {
+    const c = createChild(name, avatar, selectedColor);
+    c.contract = selectedContract;
+    state.children.push(c);
+    showToast(`Perfil "${name}" creado 🎉`, 'success');
+  }
+  saveState(state);
+  closeModal();
+  renderChildren();
+});
+
+/* ── DELETE CHILD ─────────────────────── */
+function deleteChild(id) {
+  if (!confirm('¿Eliminar este perfil? Se perderán todos sus datos.')) return;
+  const state = loadState();
+  state.children     = state.children.filter(c => c.id !== id);
+  state.transactions = state.transactions.filter(t => t.childId !== id);
+  state.books        = (state.books  || []).filter(b => b.childId !== id);
+  state.goals        = (state.goals  || []).filter(g => g.childId !== id);
+  saveState(state);
+  renderChildren();
+  showToast('Perfil eliminado');
+}
+
+/* ── LOAD SETTINGS ────────────────────── */
+function loadSettings() {
+  const state = loadState();
+  const s     = state.settings || {};
+  document.getElementById('cfg-coinName').value       = s.coinName        || 'Talento';
+  document.getElementById('cfg-exchangeRate').value   = s.exchangeRate    || 500;
+  document.getElementById('cfg-coinsPerPage').value   = s.coinsPerPage    || 2;
+  document.getElementById('cfg-chestTarget').value    = state.communalChestTarget || 1000;
+  document.getElementById('cfg-rustDays').value       = s.rustDays        || 7;
+  document.getElementById('cfg-rustPercent').value    = s.rustPercent     || 5;
+  document.getElementById('cfg-weekGenre').value      = s.weeklyThemeGenre || 'Historia';
+  document.getElementById('cfg-weekMultiplier').value = s.weeklyThemeBonus || 2;
+  document.getElementById('toggle-weekly').classList.toggle('on', !!s.weeklyThemeActive);
+}
+
+/* ── SAVE ECONOMY ─────────────────────── */
+document.getElementById('btn-save-economy').addEventListener('click', () => {
+  const state = loadState();
+  state.settings.coinName     = document.getElementById('cfg-coinName').value.trim() || 'Talento';
+  state.settings.exchangeRate = +document.getElementById('cfg-exchangeRate').value  || 500;
+  state.settings.coinsPerPage = +document.getElementById('cfg-coinsPerPage').value  || 2;
+  state.communalChestTarget   = +document.getElementById('cfg-chestTarget').value   || 1000;
+  saveState(state);
+  showToast('Economía guardada ✓', 'success');
+});
+
+/* ── SAVE DISCIPLINE ──────────────────── */
+document.getElementById('btn-save-discipline').addEventListener('click', () => {
+  const state = loadState();
+  state.settings.rustDays    = +document.getElementById('cfg-rustDays').value    || 7;
+  state.settings.rustPercent = +document.getElementById('cfg-rustPercent').value || 5;
+  saveState(state);
+  showToast('Disciplina guardada ✓', 'success');
+});
+
+/* ── TOGGLE WEEKLY ────────────────────── */
+document.getElementById('toggle-weekly').addEventListener('click', function() {
+  this.classList.toggle('on');
+});
+
+/* ── SAVE WEEKLY ──────────────────────── */
+document.getElementById('btn-save-weekly').addEventListener('click', () => {
+  const state = loadState();
+  state.settings.weeklyThemeActive = document.getElementById('toggle-weekly').classList.contains('on');
+  state.settings.weeklyThemeGenre  = document.getElementById('cfg-weekGenre').value;
+  state.settings.weeklyThemeBonus  = +document.getElementById('cfg-weekMultiplier').value || 2;
+  saveState(state);
+  showToast('Semana temática guardada ✓', 'success');
+});
+
+/* ── DATA ─────────────────────────────── */
+document.getElementById('btn-export').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(loadState(), null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `bibliocoins_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('Datos exportados', 'success');
+});
+
+document.getElementById('btn-import').addEventListener('click', () =>
+  document.getElementById('import-file').click());
+
+document.getElementById('import-file').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      localStorage.setItem('bibliocoins_v1', ev.target.result);
+      showToast('Datos importados ✓', 'success');
+      setTimeout(() => location.reload(), 900);
+    } catch { showToast('Archivo inválido', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (prompt('Escribe BORRAR para confirmar:') === 'BORRAR') {
+    localStorage.removeItem('bibliocoins_v1');
+    showToast('Todos los datos eliminados');
+    setTimeout(() => location.reload(), 900);
+  }
+});
+
+/* ── INIT ─────────────────────────────── */
+buildColorPicker(null);
+setContract('normal');
+renderChildren();
+loadSettings();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiblioCoins — Configuración</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
     .child-row {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 0; border-bottom: 1px solid var(--border);
